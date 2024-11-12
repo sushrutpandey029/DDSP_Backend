@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | DDSP</title>
+    <link rel="stylesheet" href="/css/adminlogin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            {{#each errors}}
+            <div class="alert alert-danger" id="alert" role="alert">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {{errormessage}}
+            </div>
+            {{/each}}
+            <h2>DDSP Admin Login</h2>
+            <form action="/api/admin/adminlogin" method="POST">
+                <div class="input-box">
+                    <input type="email" name="email">
+                    <label>Email</label>
+                </div>
+                <div class="input-box">
+                    <input type="password" name="password">
+                    <label>Password</label>
+                </div>
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
