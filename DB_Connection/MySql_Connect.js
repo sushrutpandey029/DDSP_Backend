@@ -1,7 +1,7 @@
 import { Sequelize } from "sequelize";
 
-const sequelize  = new Sequelize('ddsp','root','root@123',{
-    host:'127.0.0.1',
+const sequelize  = new Sequelize('milleniancecp_ddsp','milleniancecp_ddsp','e2Sx#Gh#DKwI',{
+    host:'localhost',
     dialect:'mysql'
 });
 
