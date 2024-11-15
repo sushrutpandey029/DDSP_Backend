@@ -6,11 +6,11 @@ const storage = multer.diskStorage({
         cb(null, 'Views/src/ProfileImage/'); // Directory where the files will be saved
     },
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname)); // Unique file name
+        const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
+        cb(null, filename); // Save only the filename
     }
 });
 
-const ProfileUploaupLoad = multer({ storage: storage });
+const ProfileUpload = multer({ storage: storage });
 
-export default ProfileUploaupLoad;
+export default ProfileUpload;

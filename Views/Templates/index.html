@@ -1,37 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login | DDSP</title>
-    <link rel="stylesheet" href="/css/adminlogin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <title>Farmer Details</title>
+    <style>
+        /* Basic Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        h2 {
+            color: #34495e;
+        }
+        h3 {
+            margin-top: 10px;
+            color: #7f8c8d;
+        }
+        p {
+            margin-left: 20px;
+            color: #555;
+        }
+        .crop-container {
+            margin-left: 20px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #eef;
+            border-radius: 5px;
+        }
+        .crop-input {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .crop-input label {
+            font-size: 14px;
+        }
+        .crop-input input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .total-cost {
+            font-weight: bold;
+            color: #333;
+        }
+        .submit-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
 </head>
-
 <body>
-    <div class="login-container">
-        <div class="login-box">
-            {{#each errors}}
-            <div class="alert alert-danger" id="alert" role="alert">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {{errormessage}}
-            </div>
-            {{/each}}
-            <h2>DDSP Admin Login</h2>
-            <form action="/api/admin/adminlogin" method="POST">
-                <div class="input-box">
-                    <input type="email" name="email">
-                    <label>Email</label>
-                </div>
-                <div class="input-box">
-                    <input type="password" name="password">
-                    <label>Password</label>
-                </div>
-                <button type="submit" class="login-btn">Login</button>
-            </form>
-        </div>
+    <h1>Farmer Details</h1>
+    <div id="farmer-data">
+        <!-- Farmer details will be displayed here dynamically -->
     </div>
-</body>
+    <div id="error-message" class="error"></div>
 
+    <script>
+        const apiURL = "http://localhost:2024/api/user/addCultivationCostDetails1/5";
+
+        // Function to dynamically render farmer data
+        function renderFarmerData(data) {
+            const farmerDataDiv = document.getElementById('farmer-data');
+            farmerDataDiv.innerHTML = ""; // Clear existing data
+
+            // Farmer ID
+            const farmerID = document.createElement('h2');
+            farmerID.textContent = `Farmer ID: ${data.farmerID}`;
+            farmerDataDiv.appendChild(farmerID);
+
+            // Seasons (Rabi and Kharif)
+            for (const season in data.crops) {
+                const seasonTitle = document.createElement('h3');
+                seasonTitle.textContent = `${season.charAt(0).toUpperCase() + season.slice(1)} Season`;
+                farmerDataDiv.appendChild(seasonTitle);
+
+                // Irrigation Types
+                for (const irrigationType in data.crops[season]) {
+                    const irrigationTitle = document.createElement('p');
+                    irrigationTitle.textContent = `${irrigationType.replace('_', ' ').toUpperCase()}:`;
+                    farmerDataDiv.appendChild(irrigationTitle);
+
+                    // Crop List
+                    data.crops[season][irrigationType].forEach(crop => {
+                        const cropContainer = document.createElement('div');
+                        cropContainer.className = "crop-container";
+
+                        const cropName = document.createElement('p');
+                        cropName.textContent = crop;
+                        cropContainer.appendChild(cropName);
+
+                        // Cost Input Fields
+                        const cropInputContainer = document.createElement('div');
+                        cropInputContainer.className = "crop-input";
+
+                        const costs = [
+                            "Cost 1 - Seeds And Seed Processing",
+                            "Cost 2 – Land Preparation",
+                            "Cost 3 – Fertilizers",
+                            "Cost 4 – Pesticides",
+                            "Cost 5 - Harvesting",
+                            "Cost 6 – Other Labour Cost and Misc. Costs"
+                        ];
+
+                        const costValues = {};
+
+                        costs.forEach((cost, index) => {
+                            const label = document.createElement('label');
+                            label.textContent = cost;
+
+                            const input = document.createElement('input');
+                            input.type = "number";
+                            input.placeholder = `Enter ${cost}`;
+                            input.dataset.costIndex = index + 1;
+
+                            // Store cost in costValues object
+                            input.addEventListener('input', () => {
+                                costValues[`Cost ${index + 1}`] = parseFloat(input.value) || 0;
+                            });
+
+                            cropInputContainer.appendChild(label);
+                            cropInputContainer.appendChild(input);
+                        });
+
+                        // Total Cost Field
+                        const totalCostLabel = document.createElement('label');
+                        totalCostLabel.className = "total-cost";
+                        totalCostLabel.textContent = "Total Cost –";
+
+                        const totalCostInput = document.createElement('input');
+                        totalCostInput.type = "number";
+                        totalCostInput.placeholder = "Total Cost (Calculated)";
+                        totalCostInput.readOnly = true;
+
+                        cropInputContainer.addEventListener('input', () => {
+                            const inputs = cropInputContainer.querySelectorAll('input[type="number"]');
+                            let total = 0;
+
+                            inputs.forEach(input => {
+                                if (!input.readOnly) {
+                                    total += parseFloat(input.value) || 0;
+                                }
+                            });
+
+                            totalCostInput.value = total.toFixed(2);
+                        });
+
+                        cropInputContainer.appendChild(totalCostLabel);
+                        cropInputContainer.appendChild(totalCostInput);
+
+                        // Add Input Container to Crop Container
+                        cropContainer.appendChild(cropInputContainer);
+
+                        // Submit Button
+                        const submitButton = document.createElement('button');
+                        submitButton.className = "submit-btn";
+                        submitButton.textContent = "Submit";
+                        submitButton.addEventListener('click', () => {
+                            const cropData = {
+                                cropName: crop,
+                                costs: costValues,
+                                totalCost: totalCostInput.value
+                            };
+                            console.log("Submitted Crop Data:", cropData);
+                            alert(`Data for ${crop} submitted successfully!`);
+                        });
+
+                        cropContainer.appendChild(submitButton);
+
+                        // Add Crop Container to Main Div
+                        farmerDataDiv.appendChild(cropContainer);
+                    });
+                }
+            }
+        }
+
+        // Fetch data from API
+        fetch(apiURL)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderFarmerData(data);
+            })
+            .catch(error => {
+                console.error('Error fetching farmer data:', error);
+                const errorMessageDiv = document.getElementById('error-message');
+                errorMessageDiv.textContent = "Failed to load farmer data. Please try again later.";
+            });
+    </script>
+</body>
 </html>

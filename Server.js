@@ -8,6 +8,8 @@ import { router } from './Routes/Router.js';
 import hbs from 'hbs'
 import path from 'path';
 import { fileURLToPath } from 'url';
+import flash from 'connect-flash';
+import cors from 'cors'; 
 
 dotenv.config();
 
@@ -25,6 +27,7 @@ requiredEnvVars.forEach((varName) => {
 
 
 const app = express();
+app.use(cors());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,6 +41,7 @@ app.set('views', path.join(__dirname, 'src', 'views'));
 app.set('views', path.join(__dirname, 'Views', 'Templates'));
 // app.use(express.static(path.join(__dirname, 'src', 'assets'))); 
 app.use(express.static(path.join(__dirname, 'Views', 'src', 'assets')));
+app.use('/profile-images', express.static(path.join(__dirname, 'Views', 'src', 'ProfileImage')));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -50,6 +54,14 @@ app.use(session({
   saveUninitialized: true,
   cookie: { secure: process.env.NODE_ENV === 'development'} // Set secure to true if using HTTPS
 }));
+
+app.use(flash());
+
+// Pass flash messages to all views
+app.use((req, res, next) => {
+  res.locals.errors = req.flash('error');
+  next();
+});
 
 
 app.use('/', router);

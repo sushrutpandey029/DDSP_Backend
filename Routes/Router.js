@@ -1,6 +1,6 @@
 import express from 'express';
 import { AdminRegister, AdminLogin, Adminlogin, AdminDashboard, UserRegister, UserLogin } from '../Controllers/Admin_Controller.js';
-import { data,updateUser,addFarmerInfo,addCultivationCostDetails } from '../Controllers/ProjectManager_Controller.js';
+import { data,updateUser,addFarmerInfo,getFarmers,addCultivationCostDetails,addCultivationCostDetails1} from '../Controllers/ProjectManager_Controller.js';
 import { data1 } from '../Controllers/AsstProductManager_Controller.js';
 import { authenticateJWT } from '../Middlewares/JwtAuthAminLogin.js';
 import { authorizeRole } from '../Middlewares/RoleBasedAuth.js'; // Import the new middleware
@@ -12,12 +12,12 @@ router.post('/api/admin/adminregister', AdminRegister);
 
 
 router.get('/', Adminlogin);
-router.post('/api/admin/adminlogin', AdminLogin);
-router.get('/api/admin/dashboard', AdminDashboard);
+router.post('/adminlogin', AdminLogin);
+router.get('/dashboard', AdminDashboard);
 
 router.post('/api/admin/userregister', upload.single('profileimage'), UserRegister);
 
-router.put('/api/admin/user/:id', upload.single('profileimage'), updateUser);
+router.put('/api/admin/userupdate/:id', upload.single('profileimage'), updateUser);
 
 
 
@@ -29,8 +29,9 @@ router.post('/api/user/userlogin', UserLogin);
 
 // farerform
 router.post('/api/user/addfarmerinfo',addFarmerInfo);
-router.post('/api/user/addCultivationCostDetails',addCultivationCostDetails);
-
+router.get('/api/user/getFarmers',getFarmers);
+router.post('/api/user/addCultivationCostDetails/:id',addCultivationCostDetails);
+router.get('/api/user/addCultivationCostDetails1/:id',addCultivationCostDetails1)
 
 
 // Protected routes with role-based access

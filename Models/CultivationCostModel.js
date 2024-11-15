@@ -1,6 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from "../DB_Connection/MySql_Connect.js";
-import Farmer from "./FarmerInfoModel.js"; // Ensure this path is correct
+import sequelize from "../DB_Connection/MySql_Connect.js"; 
 
 const CultivationCost = sequelize.define('CultivationCost', {
     id: {
@@ -9,51 +8,13 @@ const CultivationCost = sequelize.define('CultivationCost', {
         autoIncrement: true,
     },
     farmerID: {
-        type: DataTypes.STRING,  // Match the FarmerInfos table type for farmerID
-        allowNull: false,
-        references: {
-            model: Farmer, // Reference to the Farmer model
-            key: 'farmerID',
-        },
-    },
-    cropName: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING, // Matching the farmerID type from FarmerInfo
         allowNull: false,
     },
-    seedCost: {
-        type: DataTypes.FLOAT,
+    crops: {
+        type: DataTypes.JSONB,
         allowNull: false,
-        defaultValue: 0.0,
-    },
-    landPreparationCost: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        defaultValue: 0.0,
-    },
-    fertilizerCost: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        defaultValue: 0.0,
-    },
-    pesticideCost: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        defaultValue: 0.0,
-    },
-    harvestingCost: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        defaultValue: 0.0,
-    },
-    laborCost: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        defaultValue: 0.0,
-    },
-    miscCost: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        defaultValue: 0.0,
+        defaultValue: {}  // Default to an empty object if no data is provided
     },
     totalCost: {
         type: DataTypes.FLOAT,
@@ -61,11 +22,8 @@ const CultivationCost = sequelize.define('CultivationCost', {
         defaultValue: 0.0,
     },
 }, {
-    tableName: 'CultivationCosts', // Explicit table name
-    timestamps: true,
+    tableName: 'CultivationCosts', // Table name for the model
+    timestamps: true, // Automatically handle createdAt and updatedAt fields
 });
-
-// Association to Farmer model
-CultivationCost.belongsTo(Farmer, { foreignKey: 'farmerID', targetKey: 'farmerID' });
 
 export default CultivationCost;

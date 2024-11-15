@@ -1,7 +1,7 @@
 import { Sequelize } from "sequelize";
 
-const sequelize  = new Sequelize('milleniancecp_ddsp','milleniancecp_new','Sushrut@9565',{
-    host: 'milleniance.info',  // Replace with the actual hostname
+const sequelize  = new Sequelize('ddsp','root','root@123',{
+    host: '127.0.0.1',  // Replace with the actual hostname
   dialect: 'mysql',
   port: 3306  // Default MySQL port
 });
