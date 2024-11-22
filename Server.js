@@ -1,7 +1,6 @@
 import express from 'express';
 import cluster from 'cluster';
 import dotenv from 'dotenv';
-import session from 'express-session';
 import os from 'os';
 import sequelize from "./DB_Connection/MySql_Connect.js";
 import { router } from './Routes/Router.js';
@@ -10,6 +9,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import flash from 'connect-flash';
 import cors from 'cors'; 
+import { createRequire } from 'module';
+import session from 'express-session';
+
+const require = createRequire(import.meta.url);
+const MySQLStore = require('express-mysql-session')(session);
 
 dotenv.config();
 
@@ -39,7 +43,9 @@ app.engine('html', hbs.__express);
 
 app.set('views', path.join(__dirname, 'src', 'views')); 
 app.set('views', path.join(__dirname, 'Views', 'Templates'));
-// app.use(express.static(path.join(__dirname, 'src', 'assets'))); 
+hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'));
+// app.use(express.static(path.join(__dirname, 'src', 'assets')))
+; 
 app.use(express.static(path.join(__dirname, 'Views', 'src', 'assets')));
 app.use('/profile-images', express.static(path.join(__dirname, 'Views', 'src', 'ProfileImage')));
 
@@ -48,21 +54,46 @@ app.use(express.urlencoded({ extended: true }));
 
 const Port = process.env.NODE_ENV === 'development' ? process.env.PORT || 2020 : 2024;
 
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'rashu@123', // Use a strong secret
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: process.env.NODE_ENV === 'development'} // Set secure to true if using HTTPS
-}));
+// Configure MySQL session store
+const sessionStore = new MySQLStore({
+  host: '127.0.0.1', // Your MySQL host
+  port: 3306, // Your MySQL port
+  user: 'root', // Your MySQL username
+  password: 'root@123', // Your MySQL password
+  database: 'ddsp', // Your database name
+});
 
+
+app.use(
+  session({
+    key: 'session_cookie_name', // Name of the session cookie
+    secret: 'rashu@123', // Replace with a strong secret
+    store: sessionStore, // Use MySQL session store
+    resave: false, // Avoid resaving session if not modified
+    saveUninitialized: false, // Don't create session until something is stored
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      httpOnly: true, // Prevent JavaScript from accessing cookies
+      secure: false, // Set to true if using HTTPS
+    },
+  })
+);
 app.use(flash());
 
-// Pass flash messages to all views
+// Pass session data to views
 app.use((req, res, next) => {
-  res.locals.errors = req.flash('error');
+  res.locals.user = req.session.user || null;
   next();
 });
 
+
+
+
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
 
 app.use('/', router);
 

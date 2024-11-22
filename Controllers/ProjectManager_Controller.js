@@ -1,13 +1,15 @@
 import UserModel from '../Models/UserModel.js'
 import Farmer from '../Models/FarmerInfoModel.js'
 import CultivationCost from '../Models/CultivationCostModel.js'
+import ProductionDetails from '../Models/ProductionDetailsModel.js'
+import workedetails from '../Models/PrpjectCoordinatorWorkDetailModel.js'
 
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 
 export const data = async (req, res) => {
 
-    res.status(200).send({
+    res.status(200).json({
         message: "Hello, you have accessed protected data!",
         user: req.user
     });
@@ -22,7 +24,7 @@ export const updateUser = async (req, res) => {
         // Find the user by ID
         const user = await UserModel.findByPk(id);
         if (!user) {
-            return res.status(404).send({ errormessage: "User not found" });
+            return res.status(404).json({ errormessage: "User not found" });
         }
 
         // Update fields only if new values are provided
@@ -31,13 +33,9 @@ export const updateUser = async (req, res) => {
             // Validate email format
             const emailRegex = /^\w+([\.-]?\w+)@\w+([\. -]?\w+)(\.\w{2,3})+$/;
             if (!emailRegex.test(emailid)) {
-                return res.status(400).send({ message: "Email is not valid" });
+                return res.status(400).json({ message: "Email is not valid" });
             }
-            // Check for duplicate email
-            const isDuplicateEmail = await UserModel.findOne({ where: { emailid } });
-            if (isDuplicateEmail) {
-                return res.status(400).send({ errormessage: "Email already exists" });
-            }
+            
             user.emailid = emailid;
         }
         if (phonenumber) user.phonenumber = phonenumber;
@@ -49,7 +47,7 @@ export const updateUser = async (req, res) => {
         // Save the updated user data
         await user.save();
 
-        return res.status(200).send({
+        return res.status(200).json({
             status: true,
             message: "User updated successfully",
             user: {
@@ -65,7 +63,7 @@ export const updateUser = async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).send({ message: 'Error updating user', err: err.message });
+        return res.status(500).json({ message: 'Error updating user', err: err.message });
     }
 };
 
@@ -78,143 +76,6 @@ const generateFarmerID = () => {
 
     return `frm_${day}${month}${year}_${time}`;
 };
-
-// export const addFarmerInfo = async (req, res) => {
-//     try {
-//         const {
-//             name, mobileNumber, emailID, villageName, taluka, district,
-//             cultivatedLand, typeOfLand, cropsSown, desiBreeds, irrigationSource,
-//             soilConservationMeasures, microIrrigation
-//         } = req.body;
-
-//         // Generate a unique farmerID
-//         const farmerID = await generateFarmerID();  // Implement this function
-
-//         // Create the farmer record with the generated farmerID
-//         const farmer = await Farmer.create({
-//             farmerID,  // Don't include id, it's auto-generated
-//             name,
-//             mobileNumber,
-//             emailID,
-//             villageName,
-//             taluka,
-//             district,
-//             cultivatedLand,
-//             typeOfLand,
-//             cropsSown,
-//             desiBreeds,
-//             irrigationSource,
-//             soilConservationMeasures,
-//             microIrrigation
-//         });
-
-//         return res.status(201).send({
-//             message: 'Farmer information added successfully',
-//             farmer
-//         });
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).send({ message: 'Error adding farmer information' });
-//     }
-// };
-
-
-
-
-// Function to add cultivation cost details for each crop
-// export const addCultivationCostDetails = async (req, res) => {
-//     try {
-//         const { farmerID, crops } = req.body;
-
-//         // Validate farmerID and crops data
-//         if (!farmerID || !Array.isArray(crops) || crops.length === 0) {
-//             return res.status(400).send({ message: 'Farmer ID and crops data are required' });
-//         }
-
-//         // Check if the farmer exists
-//         const farmer = await Farmer.findByPk(farmerID);
-//         if (!farmer) {
-//             return res.status(404).send({ message: 'Farmer not found' });
-//         }
-
-//         const cultivationCosts = [];
-//         for (const crop of crops) {
-//             const { cropName, seedCost = 0, landPreparationCost = 0, fertilizerCost = 0,
-//                 pesticideCost = 0, harvestingCost = 0, laborCost = 0, miscCost = 0 } = crop;
-
-//             // Calculate the total cost
-//             const totalCost = seedCost + landPreparationCost + fertilizerCost + pesticideCost
-//                 + harvestingCost + laborCost + miscCost;
-
-//             // Create cultivation cost record for each crop
-//             const cultivationCost = await CultivationCostModel.create({
-//                 farmerID,
-//                 cropName,
-//                 seedCost,
-//                 landPreparationCost,
-//                 fertilizerCost,
-//                 pesticideCost,
-//                 harvestingCost,
-//                 laborCost,
-//                 miscCost,
-//                 totalCost,
-//             });
-
-//             cultivationCosts.push(cultivationCost);
-//         }
-
-//         return res.status(201).send({
-//             message: 'Cultivation cost details added successfully',
-//             cultivationCosts,
-//         });
-//     } catch (error) {
-//         console.error('Error details:', error);
-//         return res.status(500).send({ message: 'Error adding cultivation cost details', error: error.message });
-//     }
-// };
-
-// export const addFarmerInfo = async (req, res) => {
-//     try {
-//       const {
-//         name, mobileNumber, emailID, villageName, taluka, district,
-//         cultivatedLand, typeOfLand, cropsSown, desiBreeds, irrigationSource,
-//         soilConservationMeasures, microIrrigation
-//       } = req.body;
-
-//       // Generate a unique farmerID
-//       const farmerID = await generateFarmerID();
-
-//       // Generate the Cluster Name by combining villageName and taluka
-//       const clusterName = `${villageName}_${taluka}`;
-
-//       // Create the farmer record with the generated farmerID and clusterName
-//       const farmer = await Farmer.create({
-//         farmerID,
-//         name,
-//         mobileNumber,
-//         emailID,
-//         villageName,
-//         taluka,
-//         clusterName,
-//         district,
-//         cultivatedLand,
-//         typeOfLand,
-//         cropsSown,
-//         desiBreeds,
-//         irrigationSource,
-//         soilConservationMeasures,
-//         microIrrigation,  
-//       });
-
-//       return res.status(201).send({
-//         message: 'Farmer information added successfully',
-//         farmer
-//       });
-//     } catch (error) {
-//       console.error(error);
-//       return res.status(500).send({ message: 'Error adding farmer information' });
-//     }
-//   };
 
 export const addFarmerInfo = async (req, res) => {
     try {
@@ -249,13 +110,13 @@ export const addFarmerInfo = async (req, res) => {
             microIrrigation,
         });
 
-        return res.status(201).send({
+        return res.status(201).json({
             message: 'Farmer information added successfully',
             farmer
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).send({ message: 'Error adding farmer information' });
+        return res.status(500).json({ message: 'Error adding farmer information' });
     }
 };
 
@@ -287,83 +148,19 @@ export const addCultivationCostDetails1 = async (req, res) => {
     }
 };
 
-// export const addCultivationCostDetails = async (req, res) => {
-//     try {
-//         // Log the incoming request body to ensure we're receiving data
-//         console.log('Request body:', req.body);
+// for get data
+export const getCultivationCostDetails = async (req, res) => {
+    try {
+        const farmers = await CultivationCost.findAll(); // Fetch all farmers from the Farmer table
+        res.status(200).json({ success: true, farmers });
+    } catch (error) {
+        console.error("Error fetching farmers:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
 
-//         // Get the farmer using the ID from the request parameters
-//         const farmer = await Farmer.findByPk(req.params.id);
 
-//         // If farmer exists, proceed to insert data
-//         if (farmer) {
-//             const { farmerID, cropsSown } = farmer;
-
-//             // Log farmer details
-//             console.log('Farmer found:', farmer);
-
-//             // Extracting the crops and their cost details from the request body
-//             const { crops } = req.body; // Expecting crops to be in the request body
-
-//             if (!crops || Object.keys(crops).length === 0) {
-//                 return res.status(400).json({ error: 'No crops data provided' });
-//             }
-
-//             // Loop through each season and crop, calculating the cost
-//             for (const season in crops) {
-//                 for (const cropName in crops[season]) {
-//                     const costs = crops[season][cropName];
-
-//                     // Log the crop and costs for debugging
-//                     console.log(`Processing crop: ${cropName} in season: ${season}`, costs);
-
-//                     // Calculate total cost for the crop
-//                     const totalCost = (
-//                         (costs.seedCost || 0) +
-//                         (costs.landCost || 0) +
-//                         (costs.fertilizerCost || 0) +
-//                         (costs.pesticideCost || 0) +
-//                         (costs.harvestCost || 0) +
-//                         (costs.laborCost || 0)
-//                     );
-
-//                     // Log total cost for debugging
-//                     console.log(`Total cost for ${cropName}: ${totalCost}`);
-
-//                     // Insert each crop and its costs into the CultivationCost table
-//                     await CultivationCost.create({
-//                         farmerID,  // the ID of the farmer
-//                         cropName,  // the name of the crop
-//                         season,    // the season for the crop (e.g., rabi, kharif)
-//                         seedCost: costs.seedCost || 0,
-//                         landPreparationCost: costs.landCost || 0,
-//                         fertilizerCost: costs.fertilizerCost || 0,
-//                         pesticideCost: costs.pesticideCost || 0,
-//                         harvestingCost: costs.harvestCost || 0,
-//                         laborCost: costs.laborCost || 0,
-//                         miscCost: costs.miscCost || 0,
-//                         totalCost,  // total calculated cost
-//                     });
-//                 }
-//             }
-
-//             // Respond with a success message after inserting the data
-//             res.status(201).json({
-//                 success: true,
-//                 message: 'Cultivation costs added successfully',
-//             });
-
-//         } else {
-//             // Farmer not found, return a 404 error
-//             res.status(404).json({ error: 'Farmer not found' });
-//         }
-//     } catch (error) {
-//         // Catch any errors that happen during the process and return a 500 error
-//         console.error('Error inserting cultivation costs:', error);
-//         res.status(500).json({ error: error.message });
-//     }
-// };
-
+// for submit data
 export const addCultivationCostDetails = async (req, res) => {
     try {
         // Log the incoming request body to ensure we're receiving data
@@ -398,7 +195,8 @@ export const addCultivationCostDetails = async (req, res) => {
                             (costs.fertilizerCost || 0) +
                             (costs.pesticideCost || 0) +
                             (costs.harvestCost || 0) +
-                            (costs.laborCost || 0)
+                            (costs.laborCost || 0) +
+                            (costs.miscCost || 0)
                         );
 
                         // Log the crop and costs for debugging
@@ -439,3 +237,189 @@ export const addCultivationCostDetails = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+
+// get data Details of production 
+export const getProductionDetails = async (req, res) => {
+    try {
+        const farmer = await Farmer.findByPk(req.params.id);
+
+        if (farmer) {
+            const { farmerID, cropsSown } = farmer;
+
+            // Prepare the data with the desired format
+            const formattedCrops = [];
+
+            // Iterate over the seasons (rabi, kharif)
+            Object.keys(cropsSown).forEach((season) => {
+                // Iterate over the irrigation types within each season
+                Object.keys(cropsSown[season]).forEach((irrigationType) => {
+                    if (cropsSown[season][irrigationType].length > 0) {
+                        // Push the formatted crop data for each irrigation type
+                        formattedCrops.push({
+                            cropName: {
+                                season: season,
+                                irrigationType: irrigationType,
+                                crops: cropsSown[season][irrigationType].map((crop) => ({
+                                    name: crop,
+                                }))
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Store the formatted crops data in session
+            req.session.cropsData = formattedCrops;
+
+            // json response
+            return res.status(200).json({
+                farmerID,
+                crops: formattedCrops, // json the modified crops data
+            });
+        } else {
+            res.status(404).json({ error: 'Farmer not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+// save Details of production 
+export const addProductionDetails = async (req, res) => {
+    try {
+        const { cropName } = req.body;
+
+        if (!Array.isArray(cropName)) {
+            return res.status(400).json({
+                message: 'cropName should be an array of objects, each containing season, irrigationType, and crops.',
+            });
+        }
+
+        const farmer = await Farmer.findByPk(req.params.id);
+
+        if (!farmer) {
+            return res.status(404).json({ message: 'Farmer not found' });
+        }
+
+        const { farmerID } = farmer;
+
+        const insertedRows = [];
+
+        // Process each season entry
+        for (const entry of cropName) {
+            const { season, irrigationType, crops } = entry;
+
+            if (!season || !irrigationType || !Array.isArray(crops)) {
+                return res.status(400).json({
+                    message: 'Each entry must include season, irrigationType, and an array of crops.',
+                });
+            }
+
+            for (const crop of crops) {
+                const { name, totalYield, totalSaleValue, surplus } = crop;
+
+                if (!name || !totalYield || !totalSaleValue || !surplus) {
+                    return res.status(400).json({
+                        message: 'Each crop must include name, totalYield, totalSaleValue, and surplus.',
+                    });
+                }
+
+                const saleValuePerQuintal = totalSaleValue / totalYield;
+
+                // Combine crop details with metadata
+                const cropData = {
+                    name,
+                    season,
+                    irrigationType,
+                    totalYield,
+                    totalSaleValue,
+                    surplus,
+                    saleValuePerQuintal,
+                };
+
+                // Save the row directly as JSON
+                const productionDetail = await ProductionDetails.create({
+                    farmerID,
+                    cropName:cropData, // No JSON.stringify here; save as plain JSON
+                });
+
+                insertedRows.push(productionDetail);
+            }
+        }
+
+        return res.status(201).json({
+            message: 'Production details added successfully',
+            data: insertedRows,
+        });
+    } catch (err) {
+        console.error('Error saving production details:', err);
+        return res.status(500).json({ message: 'Error saving production details', error: err.message });
+    }
+};
+
+
+// workdetail form add
+
+export const addCoordinatorWorkDetails = async (req, res) => {
+    try {
+        const { trainingProgrammes, reviewMeetings, monitoringVisits, reports } = req.body;
+        const {id} = req.params; // Assume userID is passed as a parameter
+
+        // Validate request parameters
+        if (!id) {
+            return res.status(400).json({ message: 'User ID is required.' });
+        }
+
+        // Fetch the coordinator ID from the User model
+        const user = await UserModel.findByPk(id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        const coordinatorID = user.id;
+
+        if (!coordinatorID) {
+            return res.status(400).json({ message: 'Coordinator ID is missing for the user.' });
+        }
+
+        // Create a new work detail entry
+        const newWorkDetail = await workedetails.create({
+            workDetailID: `wd_${Date.now()}`, // Generate a unique ID for work details
+            coordinatorID, // Use the coordinatorID fetched from the User model
+            trainingProgrammes: trainingProgrammes || [],
+            reviewMeetings: reviewMeetings || [],
+            monitoringVisits: monitoringVisits || [],
+            reports: reports || [],
+        });
+
+        res.status(201).json({
+            message: 'Coordinator work details added successfully',
+            data: newWorkDetail,
+        });
+    } catch (err) {
+        console.error('Error adding coordinator work details:', err);
+        res.status(500).json({ message: 'Error adding coordinator work details', error: err.message });
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

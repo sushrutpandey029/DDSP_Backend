@@ -56,7 +56,7 @@ const users = sequelize.define('users',{
         validate: {
             notEmpty: true // Ensures the field is not empty
         },
-        enum: ["Project Coardinate","AsstProject Coardinate","Doctor"],
+        enum: ["Project Coardinate","Assistant Project Coordinator","Field Officer"],
     },
    
     dob: {
