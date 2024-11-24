@@ -3,6 +3,7 @@ import Farmer from '../Models/FarmerInfoModel.js'
 import CultivationCost from '../Models/CultivationCostModel.js'
 import ProductionDetails from '../Models/ProductionDetailsModel.js'
 import workedetails from '../Models/PrpjectCoordinatorWorkDetailModel.js'
+import FieldWorkerWorkDetail from '../Models/FOWorkDetailModel.js'
 
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
@@ -35,7 +36,7 @@ export const updateUser = async (req, res) => {
             if (!emailRegex.test(emailid)) {
                 return res.status(400).json({ message: "Email is not valid" });
             }
-            
+
             user.emailid = emailid;
         }
         if (phonenumber) user.phonenumber = phonenumber;
@@ -342,7 +343,7 @@ export const addProductionDetails = async (req, res) => {
                 // Save the row directly as JSON
                 const productionDetail = await ProductionDetails.create({
                     farmerID,
-                    cropName:cropData, // No JSON.stringify here; save as plain JSON
+                    cropName: cropData, // No JSON.stringify here; save as plain JSON
                 });
 
                 insertedRows.push(productionDetail);
@@ -365,7 +366,7 @@ export const addProductionDetails = async (req, res) => {
 export const addCoordinatorWorkDetails = async (req, res) => {
     try {
         const { trainingProgrammes, reviewMeetings, monitoringVisits, reports } = req.body;
-        const {id} = req.params; // Assume userID is passed as a parameter
+        const { id } = req.params; // Assume userID is passed as a parameter
 
         // Validate request parameters
         if (!id) {
@@ -406,6 +407,107 @@ export const addCoordinatorWorkDetails = async (req, res) => {
 };
 
 
+export const getFarmerById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ success: false, message: "Farmer ID is required" });
+        }
+        const farmer = await Farmer.findByPk(id);
+        if (!farmer) {
+            return res.status(404).json({ success: false, message: "Farmer not found" });
+        }
+        const responseData = {
+            cultivatedLand: farmer.cultivatedLand,
+            clusterName: farmer.clusterName,
+        };
+
+
+        res.status(200).json({ success: true, data: responseData });
+    } catch (error) {
+        console.error("Error fetching farmer:", error);
+        res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+};
+
+
+
+
+
+export const UserLogout = (req, res) => {
+    try {
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Error destroying session:', err);
+                return res.status(500).json({ success: false, message: 'Error logging out' });
+            }
+            res.clearCookie('session_cookie_name');
+            return res.status(200).json({ success: true, message: 'User logged out successfully' });
+        });
+    } catch (error) {
+        console.error('Unexpected error during logout:', error);
+        res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+    }
+};
+
+
+export const addFieldWorkerWorkDetail = async (req, res) => {
+    try {
+        const {
+            userid, name, address, qualifications, mobileNumber, emailID, ownLandCultivatedUnderNaturalFarming, clusterID,
+            workDate, villagesVisited, travelInKms, farmersContactedIndividually, groupMeetingsConducted, farmersContactedInGroupMeetings,
+            clusterTrainingPlace, farmersAttendedTraining, inputSupplied, consultancyTelephone, consultancyWhatsApp
+        } = req.body;
+
+        // Validate required fields
+        if (!userid || !name || !address || !mobileNumber || !emailID || !clusterID || !workDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please fill in all required fields.'
+            });
+        }
+
+        // Calculate the total number of farmers contacted
+        const totalConsultancy = (consultancyTelephone || 0) + (consultancyWhatsApp || 0);
+
+        // Create the work detail entry
+        const newWorkDetail = await FieldWorkerWorkDetail.create({
+            userid,
+            name,
+            address,
+            qualifications,
+            mobileNumber,
+            emailID,
+            ownLandCultivatedUnderNaturalFarming,
+            clusterID,
+            workDate,
+            villagesVisited,
+            travelInKms,
+            farmersContactedIndividually,
+            groupMeetingsConducted,
+            farmersContactedInGroupMeetings,
+            clusterTrainingPlace,
+            farmersAttendedTraining,
+            inputSupplied,
+            consultancyTelephone, 
+            consultancyWhatsApp,  
+            totalConsultancy  
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: 'Work details added successfully!',
+            data: newWorkDetail
+        });
+    } catch (error) {
+        console.error("Error adding field worker work details:", error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error adding work details.',
+            error: error.message
+        });
+    }
+};
 
 
 

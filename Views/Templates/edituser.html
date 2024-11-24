@@ -36,13 +36,11 @@
             </div>
         </header>
 
-        <form id="userRegisterForm" action="/updateuser/{{user.id}}" method="put" enctype="multipart/form-data">
+        <form id="userRegisterForm" action="/adminupdateuser/{{user.id}}" method="post" enctype="multipart/form-data">
 
-
-            <!-- Full Name -->
             <div class="mb-3">
                 <label for="fullname" class="form-label">Full Name</label>
-                <input type="text" class="form-control" id="fullname" value={{user.id}} name="fullname" >
+                <input type="text" class="form-control" id="fullname" value={{user.fullname}} name="fullname" >
             </div>
 
             <!-- Email ID -->
@@ -103,7 +101,7 @@
 
 
             <!-- Submit Button -->
-            <button type="submit" class="btn btn-primary">Register</button>
+            <button type="submit" class="btn btn-primary">Update User</button>
         </form>
 
     </div>

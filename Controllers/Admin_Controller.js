@@ -256,6 +256,78 @@ export const AdminDashboard = (req, res) => {
     }
 };
 
+export const changepassword = async (req, res) => {
+    res.render('changepassword');
+
+};
+
+
+export const UpdatePassword = async (req, res) => {
+    try {
+        const { id: userId } = req.session.user; // Correctly accessing userId from session
+        const { oldPassword, newPassword, confirmPassword } = req.body;
+
+        // Validate input
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'All fields are required.',
+            });
+        }
+
+        // Check if new password and confirm password match
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password and confirm password do not match.',
+            });
+        }
+
+        // Fetch user from the database
+        const user = await UserModel.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found.',
+            });
+        }
+
+        // Verify old password
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({
+                success: false,
+                message: 'Old password is incorrect.',
+            });
+        }
+
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Update the user's password
+        user.password = hashedPassword;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Password changed successfully.',
+        });
+    } catch (error) {
+        console.error('Error changing password:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error changing password.',
+            error: error.message,
+        });
+    }
+};
+
+
+
+
+
+
 
 
 
@@ -341,7 +413,6 @@ export const adduser = async (req, res) => {
 //     }
 // };
 
-
 export const UserRegister = async (req, res) => {
     try {
         const { fullname, emailid, password, phonenumber, address, role, dob, qualification } = req.body;
@@ -399,7 +470,6 @@ export const UserRegister = async (req, res) => {
     }
 };
 
-
 export const userlist = async (req, res) => {
     try {
         const user = await UserModel.findAll();
@@ -417,8 +487,6 @@ export const userlist = async (req, res) => {
     }
 };
 
-
-
 export const farmerlist = async (req, res) => {
     try {
         const farmer = await farmers.findAll();
@@ -435,6 +503,37 @@ export const farmerlist = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
+export const DeleteFarmerById = async (req, res) => {
+    try {
+        const farmerID = req.params.id;  
+
+      
+        const deletedUser = await farmers.destroy({
+            where: { id: farmerID }  
+        });
+
+        if (!deletedUser) {
+            
+            req.flash('error', 'Farmer not found');
+            return res.redirect('/farmerlist');
+        }
+        req.flash('success', 'Farmer deleted successfully');
+        return res.redirect('/farmerlist');
+    } catch (error) {
+        console.error("Error deleting Farmer:", error);
+        req.flash('error', 'Internal server error');
+        return res.status(500).redirect('/farmerlist');
+    }
+};
+
+export const getfarmerbyid = async (req, res) => {
+    res.render('editfarmer');
+
+};
+
+
+
 
 export const DeleteUserById = async (req, res) => {
     try {
@@ -459,7 +558,7 @@ export const DeleteUserById = async (req, res) => {
     }
 };
 
-export const updateuser = async (req, res) => {
+export const getuserbyid = async (req, res) => {
     try {
         const { id } = req.params; 
         const user = await UserModel.findByPk(id);
@@ -473,8 +572,7 @@ export const updateuser = async (req, res) => {
     }
 };
 
-
-export const updateUser = async (req, res) => {
+export const AdminupdateUser = async (req, res) => {
     try {
         const { id } = req.params;
         const { fullname, emailid, phonenumber, address, role, dob, qualification } = req.body;
@@ -526,8 +624,6 @@ export const updateUser = async (req, res) => {
         return res.status(500).redirect(`/updateuser/${id}`);
     }
 };
-
-
 
 export const UserLogin = async (req, res) => {
     try {
@@ -622,6 +718,9 @@ export const UserLogin = async (req, res) => {
         });
     }
 };
+
+
+
 
 
 
