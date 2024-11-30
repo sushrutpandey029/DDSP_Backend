@@ -1,6 +1,9 @@
 import Adminmodel from '../Models/AdminModel.js'
 import UserModel from '../Models/UserModel.js'
 import farmers from '../Models/FarmerInfoModel.js'
+import CultivationCost from '../Models/CultivationCostModel.js'
+import ProductionDetails from '../Models/ProductionDetailsModel.js'
+import FieldWorkerWorkDetail from '../Models/FOWorkDetailModel.js'
 import path from 'path'
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
@@ -245,91 +248,93 @@ export const AdminLogout = (req, res) => {
 //     res.render('admindashboard', { user });
 // };
 
-export const AdminDashboard = (req, res) => {
-    if (req.session.user) {
-        // Session exists, user is logged in
-        return res.render('admindashboard', { user: req.session.user });
-    } else {
-        // Session does not exist, redirect to login page
-        req.flash('error', 'Please log in first');
+export const AdminDashboard = async (req, res) => {
+    try {
+        if (req.session.user) {
+            const farmersList = await farmers.findAll();
+
+            const userList = await UserModel.findAll();
+            const fieldOfficerCount = await UserModel.count({ where: { Role: 'Field Officer' } });
+            const assistantCoordinatorCount = await UserModel.count({ where: { Role: 'Assistant Project Coordinator' } });
+            const projectCoordinatorCount = await UserModel.count({ where: { Role: 'Project Coordinator' } });
+
+
+            const farmerCount = farmersList.length;
+            const userCount = userList.length;
+
+
+
+            return res.render('admindashboard', {
+                user: req.session.user,
+                farmerCount: farmerCount,
+                userCount: userCount,
+                fieldOfficerCount,
+                assistantCoordinatorCount,
+                projectCoordinatorCount
+
+            });
+        } else {
+            // If session does not exist, redirect to login page
+            req.flash('error', 'Please log in first');
+            return res.redirect('/');
+        }
+    } catch (error) {
+        console.error('Error in AdminDashboard:', error);
+        req.flash('error', 'Internal server error');
         return res.redirect('/');
     }
 };
 
 export const changepassword = async (req, res) => {
+    const { id } = req.params;
     res.render('changepassword');
-
 };
 
 
 export const UpdatePassword = async (req, res) => {
     try {
-        const { id: userId } = req.session.user; // Correctly accessing userId from session
-        const { oldPassword, newPassword, confirmPassword } = req.body;
+        const { id: userId } = req.params;
+        const { oldpassword, newpassword, cpassword } = req.body;
+
+        console.log('Request Body:', req.body);
+        console.log('User ID:', userId);
 
         // Validate input
-        if (!oldPassword || !newPassword || !confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'All fields are required.',
-            });
+        if (!oldpassword || !newpassword || !cpassword) {
+            req.flash('error', 'All fields are required.');
+            return res.redirect(`/changepassword/${userId}`);
         }
 
-        // Check if new password and confirm password match
-        if (newPassword !== confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'New password and confirm password do not match.',
-            });
+        if (newpassword !== cpassword) {
+            req.flash('error', 'New password and confirm password do not match.');
+            return res.redirect(`/changepassword/${userId}`);
         }
 
-        // Fetch user from the database
-        const user = await UserModel.findByPk(userId);
+        // Fetch user from database
+        const user = await Adminmodel.findByPk(userId);
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found.',
-            });
+            req.flash('error', 'User not found.');
+            return res.redirect(`/changepassword/${userId}`);
         }
 
         // Verify old password
-        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        const isMatch = await bcrypt.compare(oldpassword, user.password);
         if (!isMatch) {
-            return res.status(400).json({
-                success: false,
-                message: 'Old password is incorrect.',
-            });
+            req.flash('error', 'Old password is incorrect.');
+            return res.redirect(`/changepassword/${userId}`);
         }
-
-        // Hash the new password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-        // Update the user's password
+        const hashedPassword = await bcrypt.hash(newpassword, 10);
         user.password = hashedPassword;
         await user.save();
 
-        return res.status(200).json({
-            success: true,
-            message: 'Password changed successfully.',
-        });
+        req.flash('success', 'Password changed successfully.');
+        res.redirect(`/changepassword/${userId}`);
     } catch (error) {
         console.error('Error changing password:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Error changing password.',
-            error: error.message,
-        });
+        req.flash('error', 'An error occurred while changing the password.');
+        res.redirect(`/changepassword/${userId}`);
     }
 };
-
-
-
-
-
-
-
-
 
 // user api
 export const adduser = async (req, res) => {
@@ -346,7 +351,7 @@ export const adduser = async (req, res) => {
 //         if (!fullname || !emailid || !password || !phonenumber || !address || !role || !dob || !qualification) {
 //             req.flash('error', 'All fields are required');
 //             return res.status(400).redirect('/adduser');
-          
+
 //         }
 
 //         // Validate email format
@@ -361,7 +366,7 @@ export const adduser = async (req, res) => {
 //         if (isDuplicateEmail) {
 //             req.flash('error', 'Email already exists');
 //             return res.status(400).redirect('/adduser');
-            
+
 //         }
 
 //         // Hash password
@@ -386,7 +391,7 @@ export const adduser = async (req, res) => {
 //             qualification
 //         });
 
-        
+
 //         return res.status(500).redirect('/userlist');
 
 //         return res.status(201).send({
@@ -462,7 +467,7 @@ export const UserRegister = async (req, res) => {
 
         req.flash('success', 'User created successfully');
         return res.redirect('/userlist');
-        
+
     } catch (err) {
         console.error(err);
         req.flash('error', 'Error creating user');
@@ -473,13 +478,13 @@ export const UserRegister = async (req, res) => {
 export const userlist = async (req, res) => {
     try {
         const user = await UserModel.findAll();
-        
+
         if (user.length === 0) {
-           
+
             return res.render('userlist', { message: 'User not found' });
         }
-        
-        
+
+
         res.render('userlist', { users: user });
     } catch (error) {
         console.error("Error fetching users:", error);
@@ -490,13 +495,13 @@ export const userlist = async (req, res) => {
 export const farmerlist = async (req, res) => {
     try {
         const farmer = await farmers.findAll();
-        
+
         if (farmer.length === 0) {
-           
+
             return res.render('farmerlist', { message: 'farmer not found' });
         }
-        
-        
+
+
         res.render('farmerlist', { farmers: farmer });
     } catch (error) {
         console.error("Error fetching farmers:", error);
@@ -506,15 +511,15 @@ export const farmerlist = async (req, res) => {
 
 export const DeleteFarmerById = async (req, res) => {
     try {
-        const farmerID = req.params.id;  
+        const farmerID = req.params.id;
 
-      
+
         const deletedUser = await farmers.destroy({
-            where: { id: farmerID }  
+            where: { id: farmerID }
         });
 
         if (!deletedUser) {
-            
+
             req.flash('error', 'Farmer not found');
             return res.redirect('/farmerlist');
         }
@@ -537,15 +542,15 @@ export const getfarmerbyid = async (req, res) => {
 
 export const DeleteUserById = async (req, res) => {
     try {
-        const userId = req.params.id;  
+        const userId = req.params.id;
 
-      
+
         const deletedUser = await UserModel.destroy({
-            where: { id: userId }  
+            where: { id: userId }
         });
 
         if (!deletedUser) {
-            
+
             req.flash('error', 'User not found');
             return res.redirect('/userlist');
         }
@@ -560,7 +565,7 @@ export const DeleteUserById = async (req, res) => {
 
 export const getuserbyid = async (req, res) => {
     try {
-        const { id } = req.params; 
+        const { id } = req.params;
         const user = await UserModel.findByPk(id);
         if (!user) {
             return res.render('edituser', { message: 'User not found', user: null });
@@ -715,6 +720,122 @@ export const UserLogin = async (req, res) => {
                 status: false,
                 errors: errors.message
             }],
+        });
+    }
+};
+
+export const details = async (req, res) => {
+    res.render('detailofproductionandcultivation')
+}
+
+// export const getProductionAndCultivationById = async (req, res) => {
+//   try {
+//     const { farmerID } = req.params;
+
+//     // Fetch data from the database
+//     const rawCultivationCosts = await CultivationCost.findAll({ where: { farmerID } });
+//     const rawProductionDetails = await ProductionDetails.findAll({ where: { farmerID } });
+
+//     // Parse nested JSON for cultivation costs
+//     const cultivationCosts = rawCultivationCosts.map(cost => ({
+//       ...cost.toJSON(),
+//       crops: JSON.parse(cost.crops), // Parse crops field as JSON
+//     }));
+
+//     // Parse nested JSON for production details
+//     const productionDetails = rawProductionDetails.map(detail => {
+//       let parsedCropName;
+//       try {
+//         parsedCropName = JSON.parse(detail.cropName); // Attempt to parse as JSON
+//       } catch {
+//         parsedCropName = detail.cropName; // Fallback to raw string if JSON parse fails
+//       }
+//       return {
+//         ...detail.toJSON(),
+//         cropName: parsedCropName,
+//       };
+//     });
+
+//     const responseData = {
+//       cultivationCosts,
+//       productionDetails,
+//     };
+
+//     // Render the Handlebars template with data
+//     res.render('detailofproductionandcultivation', { data: responseData });
+//   } catch (error) {
+//     console.error("Error fetching farmer details:", error);
+//     res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+//   }
+// };
+
+export const getProductionAndCultivationById = async (req, res) => {
+    try {
+        const { farmerID } = req.params;
+
+        // Fetch data from the database
+        const rawCultivationCosts = await CultivationCost.findAll({ where: { farmerID } });
+        const rawProductionDetails = await ProductionDetails.findAll({ where: { farmerID } });
+
+        // Parse nested JSON for cultivation costs
+        const cultivationCosts = rawCultivationCosts.map(cost => ({
+            ...cost.toJSON(),
+            crops: JSON.parse(cost.crops), // Parse crops field as JSON
+        }));
+
+        // Parse nested JSON for production details
+        const productionDetails = rawProductionDetails.map(detail => {
+            let parsedCropName;
+            try {
+                parsedCropName = JSON.parse(detail.cropName); // Attempt to parse as JSON
+            } catch {
+                parsedCropName = detail.cropName; // Fallback to raw string if JSON parse fails
+            }
+            return {
+                ...detail.toJSON(),
+                cropName: parsedCropName, // Parsed JSON or raw string
+            };
+        });
+
+        const responseData = {
+            cultivationCosts,
+            productionDetails,
+        };
+
+        console.log("Response Data:", JSON.stringify(responseData, null, 2)); // Debugging
+        // Render the Handlebars template with data
+        res.render('detailofproductionandcultivation', { data: responseData });
+    } catch (error) {
+        console.error("Error fetching farmer details:", error);
+        res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+};
+
+
+export const getAllFieldWorkerWorkDetails = async (req, res) => {
+    try {
+        // Fetch all work details
+        const allWorkDetails = await FieldWorkerWorkDetail.findAll();
+
+        if (allWorkDetails.length === 0) {
+            return res.render('farmerworkdetails', {
+                success: false,
+                message: "No work details found.",
+                data: []
+            });
+        }
+
+        return res.render('farmerworkdetails', {
+            success: true,
+            message: "All field worker work details fetched successfully.",
+            data: allWorkDetails
+        });
+    } catch (error) {
+        console.error("Error fetching all work details:", error);
+        return res.status(500).render('error', {
+            success: false,
+            message: "Error fetching work details.",
+            error: error.message
         });
     }
 };

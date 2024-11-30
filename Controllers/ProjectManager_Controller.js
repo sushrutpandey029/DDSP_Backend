@@ -4,9 +4,10 @@ import CultivationCost from '../Models/CultivationCostModel.js'
 import ProductionDetails from '../Models/ProductionDetailsModel.js'
 import workedetails from '../Models/PrpjectCoordinatorWorkDetailModel.js'
 import FieldWorkerWorkDetail from '../Models/FOWorkDetailModel.js'
-
+import { Op } from "sequelize";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
+import { SocketClosedUnexpectedlyError } from 'redis'
 
 export const data = async (req, res) => {
 
@@ -78,6 +79,7 @@ const generateFarmerID = () => {
     return `frm_${day}${month}${year}_${time}`;
 };
 
+
 export const addFarmerInfo = async (req, res) => {
     try {
         const {
@@ -85,6 +87,12 @@ export const addFarmerInfo = async (req, res) => {
             cultivatedLand, typeOfLand, cropsSown, desiBreeds, irrigationSource,
             soilConservationMeasures, microIrrigation
         } = req.body;
+        
+        if(!name || !mobileNumber || !emailID || !villageName || !taluka || !district || !cultivatedLand || !typeOfLand || !cropsSown || !desiBreeds || !irrigationSource || !soilConservationMeasures || !microIrrigation){
+                res.status(400).json({
+                    message:"All fields are required",
+                })
+        }
 
         // Generate a unique farmerID
         const farmerID = await generateFarmerID();
@@ -104,7 +112,7 @@ export const addFarmerInfo = async (req, res) => {
             district,
             cultivatedLand,
             typeOfLand,
-            cropsSown,
+            cropsSown, 
             desiBreeds,
             irrigationSource,
             soilConservationMeasures,
@@ -121,16 +129,21 @@ export const addFarmerInfo = async (req, res) => {
     }
 };
 
+
 // Example API endpoint for getting all farmers
 export const getFarmers = async (req, res) => {
     try {
         const farmers = await Farmer.findAll(); // Fetch all farmers from the Farmer table
+        if (farmers.length === 0) {
+            return res.status(404).json({ success: true, message: "No data found", farmers: [] });
+        }
         res.status(200).json({ success: true, farmers });
     } catch (error) {
         console.error("Error fetching farmers:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
 
 export const addCultivationCostDetails1 = async (req, res) => {
     try {
@@ -159,7 +172,6 @@ export const getCultivationCostDetails = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
-
 
 // for submit data
 export const addCultivationCostDetails = async (req, res) => {
@@ -238,7 +250,6 @@ export const addCultivationCostDetails = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
 
 // get data Details of production 
 export const getProductionDetails = async (req, res) => {
@@ -319,15 +330,15 @@ export const addProductionDetails = async (req, res) => {
             }
 
             for (const crop of crops) {
-                const { name, totalYield, totalSaleValue, surplus } = crop;
+                const { name, totalYield, totalSaleValue, surplus,totalCost } = crop;
 
-                if (!name || !totalYield || !totalSaleValue || !surplus) {
+                if (!name || !totalYield || !totalSaleValue || !surplus || !totalCost) {
                     return res.status(400).json({
-                        message: 'Each crop must include name, totalYield, totalSaleValue, and surplus.',
+                        message: 'Each crop must include name, totalYield, totalSaleValue, surplus and totalCost.',
                     });
                 }
 
-                const saleValuePerQuintal = totalSaleValue / totalYield;
+                const saleValuePerQuintal = (totalSaleValue / totalYield).toFixed(2);
 
                 // Combine crop details with metadata
                 const cropData = {
@@ -338,6 +349,7 @@ export const addProductionDetails = async (req, res) => {
                     totalSaleValue,
                     surplus,
                     saleValuePerQuintal,
+                    totalCost,
                 };
 
                 // Save the row directly as JSON
@@ -396,7 +408,7 @@ export const addCoordinatorWorkDetails = async (req, res) => {
             reports: reports || [],
         });
 
-        res.status(201).json({
+        return res.status(201).json({
             message: 'Coordinator work details added successfully',
             data: newWorkDetail,
         });
@@ -407,31 +419,47 @@ export const addCoordinatorWorkDetails = async (req, res) => {
 };
 
 
+// export const getFarmerById = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         if (!id) {
+//             return res.status(400).json({ success: false, message: "Farmer ID is required" });
+//         }
+//         const farmer = await Farmer.findByPk(id);
+//         if (!farmer) {
+//             return res.status(404).json({ success: false, message: "Farmer not found" });
+//         }
+//         const responseData = {
+//             cultivatedLand: farmer.cultivatedLand,
+//             clusterName: farmer.clusterName,
+//         };
+
+
+//         res.status(200).json({ success: true, data: responseData });
+//     } catch (error) {
+//         console.error("Error fetching farmer:", error);
+//         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+//     }
+// };
+
 export const getFarmerById = async (req, res) => {
     try {
         const { id } = req.params;
         if (!id) {
             return res.status(400).json({ success: false, message: "Farmer ID is required" });
         }
+        
         const farmer = await Farmer.findByPk(id);
         if (!farmer) {
             return res.status(404).json({ success: false, message: "Farmer not found" });
         }
-        const responseData = {
-            cultivatedLand: farmer.cultivatedLand,
-            clusterName: farmer.clusterName,
-        };
-
-
-        res.status(200).json({ success: true, data: responseData });
+        
+        res.status(200).json({ success: true, data: farmer });
     } catch (error) {
         console.error("Error fetching farmer:", error);
         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
 };
-
-
-
 
 
 export const UserLogout = (req, res) => {
@@ -508,6 +536,220 @@ export const addFieldWorkerWorkDetail = async (req, res) => {
         });
     }
 };
+
+
+export const UserUpdatePassword = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { oldpassword, newpassword, cpassword } = req.body;
+
+        console.log("Request Body:", req.body);
+        console.log("User ID:", id);
+
+        if (!oldpassword || !newpassword || !cpassword) {
+            return res.status(400).json({
+                errormessage: "All fields required"
+            });
+        }
+
+        if (newpassword !== cpassword) {
+            return res.status(400).json({
+                errormessage: "New password and confirm password do not match."
+            });
+        }
+
+        const user = await UserModel.findByPk(id);
+        if (!user) {
+            return res.status(400).json({
+                errormessage: "User not Found."
+            });
+        }
+
+        console.log("Stored hashed password:", user.password);
+        const isMatch = await bcrypt.compare(oldpassword, user.password);
+        console.log("Password match status:", isMatch);
+
+        if (!isMatch) {
+            return res.status(400).json({
+                errormessage: "Old password is incorrect."
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(newpassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+
+        return res.status(201).json({
+            message: "Password updated successfully"
+        });
+    } catch (error) {
+        console.error("Error updating password:", error);
+        return res.status(500).json({
+            errormessage: "An error occurred while changing the password.",
+            error: error.message
+        });
+    }
+};
+
+
+
+// export const addFarmerInfo = async (req, res) => {
+//     try {
+//         const {
+//             name, mobileNumber, emailID, villageName, taluka, district,
+//             cultivatedLand, typeOfLand, cropsSown, desiBreeds, irrigationSource,
+//             soilConservationMeasures, microIrrigation
+//         } = req.body;
+
+//         // Validate required fields
+//         if (!name || !mobileNumber || !emailID || !villageName || !taluka || !district ||
+//             !cultivatedLand || !typeOfLand || !cropsSown || !desiBreeds || !irrigationSource ||
+//             !soilConservationMeasures || !microIrrigation) {
+//             return res.status(400).json({ message: "All fields are required" });
+//         }
+
+//         // Check if emailID or mobileNumber already exists
+//         const existingFarmer = await Farmer.findOne({
+//             where: {
+//                 [Op.or]: [
+//                     { mobileNumber },
+//                     { emailID }
+//                 ]
+//             }
+//         });
+
+//         let farmerID;
+//         let id;
+
+//         if (existingFarmer) {
+//             // Farmer already exists, use existing farmerID and id
+//             farmerID = existingFarmer.farmerID;
+//             id = existingFarmer.id;
+
+//             // Insert the data using the existing farmerID and id
+//             const farmer = await Farmer.create({
+//                 id, // Use existing id
+//                 farmerID, // Use existing farmerID
+//                 name,
+//                 mobileNumber,
+//                 emailID,
+//                 villageName,
+//                 taluka,
+//                 clusterName: `${villageName}_${taluka}`, // Cluster name
+//                 district,
+//                 cultivatedLand,
+//                 typeOfLand,
+//                 cropsSown,
+//                 desiBreeds,
+//                 irrigationSource,
+//                 soilConservationMeasures,
+//                 microIrrigation,
+//             });
+
+//             return res.status(200).json({
+//                 message: 'Farmer already exists. Data updated successfully.',
+//                 farmer,
+//             });
+//         } else {
+//             // Farmer does not exist, generate new farmerID and id
+//             farmerID = await generateFarmerID();
+
+//             // Create a new farmer record
+//             const farmer = await Farmer.create({
+//                 farmerID,
+//                 name,
+//                 mobileNumber,
+//                 emailID,
+//                 villageName,
+//                 taluka,
+//                 clusterName: `${villageName}_${taluka}`, // Cluster name
+//                 district,
+//                 cultivatedLand,
+//                 typeOfLand,
+//                 cropsSown,
+//                 desiBreeds,
+//                 irrigationSource,
+//                 soilConservationMeasures,
+//                 microIrrigation,
+//             });
+
+//             return res.status(201).json({
+//                 message: 'Farmer information added successfully.',
+//                 farmer,
+//             });
+//         }
+//     } catch (error) {
+//         console.error("Error adding farmer information:", error);
+//         return res.status(500).json({ message: 'Error adding farmer information' });
+//     }
+// };
+
+
+
+
+export const getProductionAndCultivationByFarmerID = async (req, res) => {
+    try {
+        const { farmerID } = req.params;
+
+        // Fetch cultivation costs and production details based on farmerID
+        const rawCultivationCosts = await CultivationCost.findAll({ where: { farmerID } });
+        const rawProductionDetails = await ProductionDetails.findAll({ where: { farmerID } });
+
+        // Parse the 'crops' field from cultivation costs
+        const cultivationCosts = rawCultivationCosts.map(cost => ({
+            ...cost.toJSON(),
+            crops: JSON.parse(cost.crops),
+        }));
+
+        // Parse the 'cropName' field from production details
+        const productionDetails = rawProductionDetails.map(detail => {
+            let parsedCropName;
+            try {
+                parsedCropName = JSON.parse(detail.cropName); 
+            } catch {
+                parsedCropName = detail.cropName; 
+            }
+            return {
+                ...detail.toJSON(),
+                cropName: parsedCropName,
+            };
+        });
+
+        // Prepare the response data
+        const responseData = {
+            success: true,
+            message: "Farmer production and cultivation data fetched successfully",
+            data: {
+                cultivationCosts,
+                productionDetails,
+            },
+        };
+
+        // Log the response data for debugging
+        console.log("Response Data:", JSON.stringify(responseData, null, 2));
+
+        // Send JSON response to the client
+        res.status(200).json(responseData);
+
+    } catch (error) {
+        // Handle any errors and return an error response
+        console.error("Error fetching farmer details:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message,
+        });
+    }
+};
+
+
+
+
+
+
+
+
+
 
 
 

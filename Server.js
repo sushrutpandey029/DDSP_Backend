@@ -31,7 +31,13 @@ requiredEnvVars.forEach((varName) => {
 
 
 const app = express();
+
 app.use(cors());
+
+// Register the 'isObject' helper for Handlebars to check if a value is an object
+hbs.registerHelper('isObject', function(value) {
+  return typeof value === 'object' && value !== null;
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,8 +55,9 @@ hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'
 app.use(express.static(path.join(__dirname, 'Views', 'src', 'assets')));
 app.use('/profile-images', express.static(path.join(__dirname, 'Views', 'src', 'ProfileImage')));
 
-app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 const Port = process.env.NODE_ENV === 'development' ? process.env.PORT || 2020 : 2024;
 

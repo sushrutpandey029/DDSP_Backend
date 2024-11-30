@@ -1,25 +1,61 @@
+{{>header user=user}}
 
-        {{>header user=user}}
+{{>verticalnav}}
 
-        {{>verticalnav}}
+<div class="hk-pg-wrapper">
+    <div class="container-xxl">
 
-        <div class="hk-pg-wrapper">
-            <div class="container-xxl">
-
-                <div class="alert alert-success" role="alert">
-                    <p>ID: {{user.id}}</p>
-                    <p>Full Name: {{user.fullname}}</p>
-                    <p>Email: {{user.email}}</p>
-                    <p>AccessToken: {{user.token}}</p>
-                    <p>RefreshToken: {{user.refreshToken}}</p>
+        <div class="row mt-4">
+            <div class="col-sm-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Farmers</h5>
+                        <p class="card-text">{{farmerCount}}</p>
+                        <a href="#" class="btn btn-primary">farmer list</a>
+                    </div>
                 </div>
-
+            </div>
+            <div class="col-sm-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total User</h5>
+                        <p class="card-text">{{userCount}}</p>
+                        <a href="#" class="btn btn-primary">User List</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Field Officer</h5>
+                        <p class="card-text">{{fieldOfficerCount}}</p>
+                        <a href="#" class="btn btn-primary">filed officer list</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Project Coordinater</h5>
+                        <p class="card-text">{{projectCoordinatorCount}}</p>
+                        <a href="#" class="btn btn-primary">PC list</a>
+                    </div>
+                </div>
             </div>
         </div>
-   
+
+        <div class="alert alert-success" role="alert">
+            <p>ID: {{user.id}}</p>
+            <p>Full Name: {{user.fullname}}</p>
+            <p>Email: {{user.email}}</p>
+            <p>AccessToken: {{user.token}}</p>
+            <p>RefreshToken: {{user.refreshToken}}</p>
+        </div>
+
     </div>
+</div>
+
+</div>
 
 
-    {{>footer}}
-
-   
+{{>footer}}

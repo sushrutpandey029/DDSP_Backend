@@ -66,7 +66,7 @@
 
 
                     <li class="nav-item">
-                        <a class="nav-link" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#dash_reports">
+                        <a class="nav-link" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#dash_reports1">
                             <span class="nav-icon-wrap">
                                 <span class="svg-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-browser" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -79,7 +79,7 @@
                             </span>
                             <span class="nav-link-text">Farmer</span>
                         </a>
-                        <ul id="dash_reports" class="nav flex-column collapse  nav-children">
+                        <ul id="dash_reports1" class="nav flex-column collapse  nav-children">
                             <li class="nav-item">
                                 <ul class="nav flex-column">
                                     <li class="nav-item">
@@ -87,11 +87,19 @@
                                     </li>
                                 </ul>
                             </li>
+
+                            <li class="nav-item">
+                                <ul class="nav flex-column">
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/getAllFieldWorkerWorkDetails"><span class="nav-link-text">Work Details</span></a>
+                                    </li>
+                                </ul>
+                            </li>
                         </ul>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="changepassword">
+                        <a class="nav-link" href="/changepassword/{{user.id}}">
                             <span class="nav-icon-wrap">
                                 <span class="svg-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
