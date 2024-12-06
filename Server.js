@@ -11,11 +11,44 @@ import flash from 'connect-flash';
 import cors from 'cors'; 
 import { createRequire } from 'module';
 import session from 'express-session';
+import Handlebars from 'handlebars';
 
 const require = createRequire(import.meta.url);
 const MySQLStore = require('express-mysql-session')(session);
 
 dotenv.config();
+
+// Registering the custom helper to parse JSON
+hbs.registerHelper('parseJson', function (jsonString) {
+  try {
+      return JSON.parse(jsonString);
+  } catch (err) {
+      console.error('Invalid JSON string:', jsonString);
+      return [];
+  }
+});
+
+// Register a helper for greater than
+hbs.registerHelper('gt', function (value1, value2) {
+    return value1 > value2;
+});
+
+// Register the 'isObject' helper for Handlebars to check if a value is an object
+hbs.registerHelper('isObject', function(value) {
+  return typeof value === 'object' && value !== null;
+});
+
+hbs.registerHelper('eq', function (a, b) {
+  return a === b;
+});
+
+hbs.registerHelper('ifEquals', function (arg1, arg2, options) {
+  return arg1 === arg2 ? options.fn(this) : options.inverse(this);
+});
+
+hbs.registerHelper('fallback', function (value, fallbackValue) {
+  return value || fallbackValue;
+});
 
 
 
@@ -34,10 +67,7 @@ const app = express();
 
 app.use(cors());
 
-// Register the 'isObject' helper for Handlebars to check if a value is an object
-hbs.registerHelper('isObject', function(value) {
-  return typeof value === 'object' && value !== null;
-});
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,8 +110,8 @@ app.use(
     saveUninitialized: false, // Don't create session until something is stored
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 1 day
-      httpOnly: true, // Prevent JavaScript from accessing cookies
-      secure: false, // Set to true if using HTTPS
+      httpOnly: true, 
+      secure: false, 
     },
   })
 );

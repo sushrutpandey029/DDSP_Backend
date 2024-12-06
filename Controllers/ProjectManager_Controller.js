@@ -4,10 +4,9 @@ import CultivationCost from '../Models/CultivationCostModel.js'
 import ProductionDetails from '../Models/ProductionDetailsModel.js'
 import workedetails from '../Models/PrpjectCoordinatorWorkDetailModel.js'
 import FieldWorkerWorkDetail from '../Models/FOWorkDetailModel.js'
-import { Op } from "sequelize";
+import Location from '../Models/UserLocationModel.js';
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
-import { SocketClosedUnexpectedlyError } from 'redis'
 
 export const data = async (req, res) => {
 
@@ -83,32 +82,27 @@ const generateFarmerID = () => {
 export const addFarmerInfo = async (req, res) => {
     try {
         const {
-            name, mobileNumber, emailID, villageName, taluka, district,
+            name, mobileNumber, emailID, villageName, taluka, cluster, district,
             cultivatedLand, typeOfLand, cropsSown, desiBreeds, irrigationSource,
             soilConservationMeasures, microIrrigation
         } = req.body;
-        
-        if(!name || !mobileNumber || !emailID || !villageName || !taluka || !district || !cultivatedLand || !typeOfLand || !cropsSown || !desiBreeds || !irrigationSource || !soilConservationMeasures || !microIrrigation){
-                res.status(400).json({
-                    message:"All fields are required",
-                })
-        }
 
+        if (!name || !mobileNumber || !emailID || !villageName || !taluka || !cluster || !district || !cultivatedLand || !typeOfLand || !cropsSown || !desiBreeds || !irrigationSource || !soilConservationMeasures || !microIrrigation) {
+            res.status(400).json({
+                message: "All fields are required",
+            })
+        }
         // Generate a unique farmerID
         const farmerID = await generateFarmerID();
-
-        // Generate the Cluster Name by combining villageName and taluka
-        const clusterName = `${villageName}_${taluka}`;
-
-        // Create the farmer record with the generated farmerID and clusterName
+        // const clusterName = `${villageName}_${taluka}`;
         const farmer = await Farmer.create({
             farmerID,
             name,
             mobileNumber,
-            emailID,  // This now matches the updated model field 'emailID'
+            emailID,
             villageName,
             taluka,
-            clusterName,  // Place clusterName under taluka
+            clusterName: cluster,
             district,
             cultivatedLand,
             typeOfLand,
@@ -128,7 +122,6 @@ export const addFarmerInfo = async (req, res) => {
         return res.status(500).json({ message: 'Error adding farmer information' });
     }
 };
-
 
 // Example API endpoint for getting all farmers
 export const getFarmers = async (req, res) => {
@@ -296,8 +289,6 @@ export const getProductionDetails = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-
 // save Details of production 
 export const addProductionDetails = async (req, res) => {
     try {
@@ -330,7 +321,7 @@ export const addProductionDetails = async (req, res) => {
             }
 
             for (const crop of crops) {
-                const { name, totalYield, totalSaleValue, surplus,totalCost } = crop;
+                const { name, totalYield, totalSaleValue, surplus, totalCost } = crop;
 
                 if (!name || !totalYield || !totalSaleValue || !surplus || !totalCost) {
                     return res.status(400).json({
@@ -371,7 +362,6 @@ export const addProductionDetails = async (req, res) => {
         return res.status(500).json({ message: 'Error saving production details', error: err.message });
     }
 };
-
 
 // workdetail form add
 
@@ -418,7 +408,6 @@ export const addCoordinatorWorkDetails = async (req, res) => {
     }
 };
 
-
 // export const getFarmerById = async (req, res) => {
 //     try {
 //         const { id } = req.params;
@@ -448,19 +437,18 @@ export const getFarmerById = async (req, res) => {
         if (!id) {
             return res.status(400).json({ success: false, message: "Farmer ID is required" });
         }
-        
+
         const farmer = await Farmer.findByPk(id);
         if (!farmer) {
             return res.status(404).json({ success: false, message: "Farmer not found" });
         }
-        
+
         res.status(200).json({ success: true, data: farmer });
     } catch (error) {
         console.error("Error fetching farmer:", error);
         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
 };
-
 
 export const UserLogout = (req, res) => {
     try {
@@ -477,7 +465,6 @@ export const UserLogout = (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
     }
 };
-
 
 export const addFieldWorkerWorkDetail = async (req, res) => {
     try {
@@ -517,9 +504,9 @@ export const addFieldWorkerWorkDetail = async (req, res) => {
             clusterTrainingPlace,
             farmersAttendedTraining,
             inputSupplied,
-            consultancyTelephone, 
-            consultancyWhatsApp,  
-            totalConsultancy  
+            consultancyTelephone,
+            consultancyWhatsApp,
+            totalConsultancy
         });
 
         return res.status(201).json({
@@ -536,7 +523,6 @@ export const addFieldWorkerWorkDetail = async (req, res) => {
         });
     }
 };
-
 
 export const UserUpdatePassword = async (req, res) => {
     try {
@@ -590,8 +576,6 @@ export const UserUpdatePassword = async (req, res) => {
         });
     }
 };
-
-
 
 // export const addFarmerInfo = async (req, res) => {
 //     try {
@@ -684,9 +668,6 @@ export const UserUpdatePassword = async (req, res) => {
 //     }
 // };
 
-
-
-
 export const getProductionAndCultivationByFarmerID = async (req, res) => {
     try {
         const { farmerID } = req.params;
@@ -705,9 +686,9 @@ export const getProductionAndCultivationByFarmerID = async (req, res) => {
         const productionDetails = rawProductionDetails.map(detail => {
             let parsedCropName;
             try {
-                parsedCropName = JSON.parse(detail.cropName); 
+                parsedCropName = JSON.parse(detail.cropName);
             } catch {
-                parsedCropName = detail.cropName; 
+                parsedCropName = detail.cropName;
             }
             return {
                 ...detail.toJSON(),
@@ -741,6 +722,383 @@ export const getProductionAndCultivationByFarmerID = async (req, res) => {
         });
     }
 };
+
+export const FOdeleteFarmerById = async (req, res) => {
+    try {
+        const id = req.params.id;
+
+
+        const deletedUser = await Farmer.destroy({
+            where: { id: id }
+        });
+
+        if (!deletedUser) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'Farmer not found',
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Farmer deleted successfully',
+        });
+    } catch (error) {
+        console.error("Error deleting Farmer:", error);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+        });
+    }
+};
+
+export const usergetAllFieldWorkerWorkDetails = async (req, res) => {
+    try {
+        const workDetails = await FieldWorkerWorkDetail.findAll();
+
+        if (workDetails.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No work details found.",
+                data: [],
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "All field worker work details fetched successfully.",
+            data: workDetails,
+        });
+    } catch (error) {
+        console.error("Error fetching all work details:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error fetching work details.",
+            error: error.message,
+        });
+    }
+};
+
+export const getFieldWorkerWorkDetailsById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Field worker ID is required.",
+            });
+        }
+
+        // Fetch the work details using the ID
+        const workDetail = await FieldWorkerWorkDetail.findOne({
+            where: { id },
+        });
+
+        if (!workDetail) {
+            return res.status(404).json({
+                success: false,
+                message: `No work details found for field worker with ID: ${id}.`,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Field worker work details fetched successfully for ID: ${id}.`,
+            data: workDetail,
+        });
+    } catch (error) {
+        console.error("Error fetching work details by ID:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error fetching work details.",
+            error: error.message,
+        });
+    }
+};
+
+
+export const updateFieldWorkerWorkDetailsById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            userid,
+            name,
+            address,
+            qualifications,
+            mobileNumber,
+            emailID,
+            ownLandCultivatedUnderNaturalFarming,
+            clusterID,
+            workDate,
+            villagesVisited,
+            travelInKms,
+            farmersContactedIndividually,
+            groupMeetingsConducted,
+            farmersContactedInGroupMeetings,
+            clusterTrainingPlace,
+            farmersAttendedTraining,
+            inputSupplied,
+            consultancyTelephone,
+            consultancyWhatsApp,
+            totalConsultancy,
+        } = req.body; // Destructure fields from request body
+
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Field worker ID is required.",
+            });
+        }
+
+        // Validate input payload
+        if (!name || !mobileNumber || !emailID) {
+            return res.status(400).json({
+                success: false,
+                message: "Name, mobile number, and email ID are required fields.",
+            });
+        }
+
+        // Find the record by ID
+        const workDetail = await FieldWorkerWorkDetail.findOne({ where: { id } });
+        if (!workDetail) {
+            return res.status(404).json({
+                success: false,
+                message: `No field worker work details found for ID: ${id}.`,
+            });
+        }
+
+        // Update the record
+        const updatedWorkDetail = await FieldWorkerWorkDetail.update(
+            {
+                userid,
+                name,
+                address,
+                qualifications,
+                mobileNumber,
+                emailID,
+                ownLandCultivatedUnderNaturalFarming,
+                clusterID,
+                workDate,
+                villagesVisited,
+                travelInKms,
+                farmersContactedIndividually,
+                groupMeetingsConducted,
+                farmersContactedInGroupMeetings,
+                clusterTrainingPlace,
+                farmersAttendedTraining,
+                inputSupplied: JSON.stringify(inputSupplied), // Store array as a JSON string
+                consultancyTelephone,
+                consultancyWhatsApp,
+                totalConsultancy,
+            },
+            { where: { id } }
+        );
+
+        if (!updatedWorkDetail[0]) {
+            return res.status(400).json({
+                success: false,
+                message: `Failed to update work details for ID: ${id}.`,
+            });
+        }
+
+        // Return success response
+        return res.status(200).json({
+            success: true,
+            message: `Field worker work details updated successfully for ID: ${id}.`,
+        });
+    } catch (error) {
+        console.error("Error updating work details:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error updating work details.",
+            error: error.message,
+        });
+    }
+};
+
+export const updateFarmerDetails = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const {
+            farmerID,
+            newname,
+            mobileNumber,
+            emailID,
+            villagename,
+            taluka,
+            clusterName,
+            district,
+            cultivatedLand,
+            desiBreeds,
+            typeOfLand,
+            sourceIrrigationItems,
+            conservationMeasureItems,
+            microIrrigation,
+            ...flattenedCropsSown
+        } = req.body;
+
+        console.log("Request body data:", req.body);
+
+        const cropsSown = {};
+        Object.keys(flattenedCropsSown).forEach((key) => {
+            if (key.startsWith("cropsSown.")) {
+                const path = key.replace("cropsSown.", "").split(".");
+                let current = cropsSown;
+
+                path.forEach((segment, index) => {
+                    if (index === path.length - 1) {
+                        if (!current[segment]) current[segment] = [];
+                        const [crop, cropLand] = flattenedCropsSown[key];
+                        current[segment].push({ crop, cropLand });
+                    } else {
+                        current[segment] = current[segment] || {};
+                        current = current[segment];
+                    }
+                });
+            }
+        });
+
+        console.log("Transformed cropsSown data:", cropsSown);
+
+        // Find the farmer record by ID
+        const farmer = await Farmer.findByPk(id);
+        if (!farmer) {
+            return res.status(404).json({
+                success: false,
+                message: "Farmer not found",
+            });
+        }
+
+        // Update fields
+        farmer.farmerID = farmerID;
+        farmer.name = newname;
+        farmer.mobileNumber = mobileNumber;
+        farmer.emailID = emailID;
+        farmer.villageName = villagename;
+        farmer.taluka = taluka;
+        farmer.clusterName = clusterName;
+        farmer.district = district;
+        farmer.cultivatedLand = cultivatedLand;
+        farmer.desiBreeds = desiBreeds;
+        farmer.typeOfLand = typeOfLand;
+        farmer.sourceIrrigationItems = sourceIrrigationItems;
+        farmer.conservationMeasureItems = conservationMeasureItems;
+        farmer.microIrrigation = microIrrigation;
+
+        if (Object.keys(cropsSown).length > 0) {
+            try {
+                farmer.cropsSown = cropsSown;
+            } catch (err) {
+                console.error('Failed to stringify cropsSown:', err.message);
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid cropsSown format",
+                });
+            }
+        }
+
+        console.log("Updated farmer data:", farmer);
+
+        await farmer.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Farmer details updated successfully",
+            data: farmer,
+        });
+    } catch (error) {
+        console.error('Error updating farmer:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while updating farmer details",
+            error: error.message,
+        });
+    }
+};
+
+
+
+// Location APi's
+
+export const UserLocation = async (req, res) => {
+
+    try {
+        const { userId, fullname, role, latitude, longitude } = req.body;
+
+        if (!userId || !fullname || !role || !latitude || !longitude) {
+            return res.status(400).json({ success: false, message: "All fields are required." });
+        }
+        const newLocation = await Location.create({
+            userId,
+            fullname,
+            role,
+            latitude,
+            longitude,
+        });
+
+        res.status(201).json({ success: true, message: "Location added successfully!", data: newLocation });
+    } catch (error) {
+        console.error("Error adding location:", error);
+        res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+
+}
+
+
+export const getalllocation =  async (req, res) => {
+    try {
+        const locations = await Location.findAll();
+        res.status(200).json({ success: true, data: locations });
+    } catch (error) {
+        console.error("Error fetching locations:", error);
+        res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+};
+
+export const getlocationbyuserid = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const location = await Location.findOne({ where: { userId } });
+
+        if (!location) {
+            return res.status(404).json({ success: false, message: "Location not found for this userId." });
+        }
+
+        res.status(200).json({ success: true, data: location });
+    } catch (error) {
+        console.error("Error fetching location:", error);
+        res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+};
+
+
+export const locationdeletebyid = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const location = await Location.findOne({ where: { id } });
+
+        if (!location) {
+            return res.status(404).json({ success: false, message: "Location not found." });
+        }
+
+        await location.destroy();
+
+        res.status(200).json({ success: true, message: "Location deleted successfully!" });
+    } catch (error) {
+        console.error("Error deleting location:", error);
+        res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+};
+
+
+
+
+
 
 
 

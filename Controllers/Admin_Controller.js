@@ -7,6 +7,9 @@ import FieldWorkerWorkDetail from '../Models/FOWorkDetailModel.js'
 import path from 'path'
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
+import Op from 'sequelize';
+import sequelize from 'sequelize';
+// import sequelize from '../DB_Connection/MySql_Connect.js'
 
 
 export const Adminlogin = async (req, res) => {
@@ -122,159 +125,501 @@ export const AdminLogout = (req, res) => {
     });
 };
 
-
-
-// export const AdminLogin = async (req, res) => {
-//     try {
-//         const { email, password } = req.body;
-
-//         // Validate input
-//         if (!email || !password) {
-//             // Redirect to '/' with an error message if fields are missing
-//             req.flash('error', 'All fields are required');
-//             return res.status(400).redirect('/');
-//         }
-
-//         // Check if the user exists
-//         const user = await Adminmodel.findOne({ where: { email } });
-//         if (!user) {
-//             // Redirect to '/' with an error message if the user is not found
-//             req.flash('error', 'User not found');
-//             return res.status(401).redirect('/');
-//         }
-
-//         // Check if the password is correct
-//         const isValid = await bcrypt.compare(password, user.password);
-//         if (!isValid) {
-//             // Redirect to '/' with an error message if the password is invalid
-//             req.flash('error', 'Invalid password');
-//             return res.status(401).redirect('/');
-//         }
-
-//         // Generate access and refresh tokens
-//         const token = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-//         const refreshToken = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '7d' });
-
-//         // Save refresh token in the database
-//         user.refreshToken = refreshToken;
-//         await user.save();
-
-//         // Save user info in session
-//         req.session.user = {
-//             id: user.id,
-//             fullname: user.fullname,
-//             email: user.email,
-//             token,
-//             refreshToken: user.refreshToken
-//         };
-
-//         // Redirect to the dashboard on successful login
-//         return res.status(200).redirect('/dashboard');
-
-//     } catch (errors) {
-//         console.error(errors);
-//         // Redirect to '/' with a general error message
-//         req.flash('error', 'Error logging in');
-//         return res.status(500).redirect('/');
-//     }
-// };
-
-
-// export const AdminLogin = async (req, res) => {
-//     try {
-//         const { email, password } = req.body;
-
-//         // Validate input
-//         if (!email || !password) {
-//             return res.status(400).redirect('/', {
-//                 errors: [{ errormessage: "All fields are required" }],
-//                 email,
-//                 password
-//             });
-//         }
-
-//         const user = await Adminmodel.findOne({ where: { email } });
-//         if (!user) {
-//             return res.status(401).render('index', {
-//                 errors: [{ errormessage: "User not found", status: false }],
-//                 email
-//             });
-//         }
-
-//         const isValid = await bcrypt.compare(password, user.password);
-//         if (!isValid) {
-//             return res.status(401).render('index', {
-//                 errors: [{ errormessage: "Invalid password", status: false }],
-//                 password
-//             });
-//         }
-
-//         const token = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-//         const refreshToken = jwt.sign({ id: user.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '7d' });
-
-//         // Save refresh token in the database
-//         user.refreshToken = refreshToken;
-//         await user.save();
-
-//         req.session.user = {
-//             id: user.id,
-//             fullname: user.fullname,
-//             email: user.email,
-//             token,
-//             refreshToken: user.refreshToken
-//         };
-
-//         return res.status(200).redirect('/dashboard');
-
-//     } catch (errors) {
-//         console.error(errors);
-//         return res.status(500).render('index', {
-//             errors: [{ errormessage: "Error logging in", status: false, errors: errors.message }]
-//         });
-//     }
-// };
-
 // export const AdminDashboard = async (req, res) => {
-//     const user = req.session.user;
+//     try {
+//         if (req.session.user) {
+//             const farmersList = await farmers.findAll();
+//             const userList = await UserModel.findAll();
 
-//     // Check if the user is authenticated by verifying the token in the session
-//     if (!user || !user.token) {
-//         // Set a flash message and redirect to the login page
-//         req.flash('error', 'Unauthorized access. Please log in again.');
-//         return res.status(401).redirect('/');
+//             const fieldOfficerCount = await UserModel.count({ where: { Role: 'Field Officer' } });
+//             const assistantCoordinatorCount = await UserModel.count({ where: { Role: 'Assistant Project Coordinator' } });
+//             const projectCoordinatorCount = await UserModel.count({ where: { Role: 'Project Coordinator' } });
+
+//             const farmerCount = farmersList.length;
+//             const userCount = userList.length;
+
+//             const { village = "Borjai" } = req.query;
+//             let filteredFarmerCount = 0;
+
+//             if (village) {
+//                 filteredFarmerCount = await farmers.count({
+//                     where: { villageName: village }
+//                 });
+//             }
+
+//             // Get monthly farmer data
+//             const monthlyFarmerData = await getMonthlyFarmerData(village);
+
+//             const villageslist = [
+//                 "Aajani",
+//                 "Aajanti",
+//                 "Aashti",
+//                 "Aasola",
+//                 "Adani",
+//                 "Adani Pod",
+//                 "Amala Gav",
+//                 "Amala Tanda",
+//                 "Amshet",
+//                 "Anji",
+//                 "Anuppod",
+//                 "Arambhi",
+//                 "Athmurdi",
+//                 "Banayat",
+//                 "Bandar",
+//                 "Baradgaon",
+//                 "Bechkheda",
+//                 "Belora",
+//                 "Bhamb Raja",
+//                 "Bhurkipod",
+//                 "Bodgavhan",
+//                 "Borgaon",
+//                 "Bori Chandra",
+//                 "Bori Gosavi",
+//                 "Bori Sinha",
+//                 "Borjai",
+//                 "Bramhanpur",
+//                 "Bramhanwada",
+//                 "Bramhanwada Purv",
+//                 "Bramhanwada Tanda",
+//                 "Bramhi",
+//                 "Chandapur",
+//                 "Chani",
+//                 "Chauki",
+//                 "Chauki Zuli",
+//                 "Chikani",
+//                 "Chikhali",
+//                 "Chinchala",
+//                 "Chinchamandal",
+//                 "Chopan",
+//                 "Churkuta",
+//                 "Dabha",
+//                 "Daheli",
+//                 "Dahifal",
+//                 "Deurwadi",
+//                 "Devala",
+//                 "Devdharui",
+//                 "Dhaipod",
+//                 "Dhanaj",
+//                 "Dharanpod",
+//                 "Domaga",
+//                 "Dongargaon",
+//                 "Dudhgav",
+//                 "Echora",
+//                 "Fulwadi",
+//                 "Gadegao",
+//                 "Gajipur",
+//                 "Garpod",
+//                 "Gaulpend",
+//                 "Gaurala",
+//                 "Gavpod",
+//                 "Ghubadheti",
+//                 "Gondegaon",
+//                 "Gondgavhan",
+//                 "Gunj",
+//                 "Haru",
+//                 "Hatgaon",
+//                 "Hivara",
+//                 "Indrathana",
+//                 "Jambhora",
+//                 "Jamwadi",
+//                 "Jankai",
+//                 "Kamathwada",
+//                 "Kanada",
+//                 "Kanala",
+//                 "Kanzara",
+//                 "Kapshi",
+//                 "Karamala",
+//                 "Khairgaon",
+//                 "Khairgaon Pod",
+//                 "Khairgaon Tanda",
+//                 "Khandani",
+//                 "Khatara",
+//                 "Kinhi Walashi",
+//                 "Krushnapur",
+//                 "Kumbhari",
+//                 "Kumbhipod",
+//                 "Ladkhed",
+//                 "Lakhmapur",
+//                 "Lohatwadi",
+//                 "Loni",
+//                 "Majara",
+//                 "Malkhed Bu.",
+//                 "Malkinho",
+//                 "Mangla Devi",
+//                 "Mangrul",
+//                 "Manikwada",
+//                 "Manjarda",
+//                 "Mardi",
+//                 "Maregaon",
+//                 "Masola",
+//                 "Mendhala",
+//                 "Mendhani",
+//                 "Morath",
+//                 "Morgavhan",
+//                 "Mozar",
+//                 "Mukindpur",
+//                 "Munjhala",
+//                 "Murli",
+//                 "Nababpur",
+//                 "Nagai",
+//                 "Nageshvar",
+//                 "Nait",
+//                 "Naka Pardi",
+//                 "Narkund",
+//                 "Narsapur",
+//                 "Ner",
+//                 "Pahapal",
+//                 "Palaskund",
+//                 "Pandharkawada",
+//                 "Pandhurbna",
+//                 "Pandhurna Budruk",
+//                 "Pandhurna Khurd",
+//                 "Pangari",
+//                 "Pangari Tanda",
+//                 "Paradhi Beda",
+//                 "Pardhi Tanda",
+//                 "Pathari",
+//                 "Pathrad Gole",
+//                 "Pendhara",
+//                 "Pimpalgaon",
+//                 "Pimpari Ijara",
+//                 "Pisgaon",
+//                 "Prathrad Devi",
+//                 "Ramnagar Tanda",
+//                 "Rui",
+//                 "Sajegaon",
+//                 "Salaipod",
+//                 "Salod",
+//                 "Sarangpur",
+//                 "Sarkinhi",
+//                 "Satefal",
+//                 "Savangi",
+//                 "Sawala",
+//                 "Sawana",
+//                 "Sawanga",
+//                 "Sawargaon",
+//                 "Sawargaon Kale",
+//                 "Saykheda",
+//                 "Sevadas Nagar",
+//                 "Shakalgaon",
+//                 "Shankarpur",
+//                 "Shelodi",
+//                 "Shindi",
+//                 "Shirpurwadi",
+//                 "Shivani",
+//                 "Shivpod",
+//                 "Singaldip",
+//                 "Sonegaon",
+//                 "Sonupod",
+//                 "Sonurli",
+//                 "Surdevi",
+//                 "Takali",
+//                 "Tembhi",
+//                 "Thalegaon",
+//                 "Tiwasa",
+//                 "Uchegaon",
+//                 "Udapur",
+//                 "Ujona",
+//                 "Umari",
+//                 "Umartha",
+//                 "Vasantnagar",
+//                 "Veni",
+//                 "Virgavhan",
+//                 "Vyahali",
+//                 "Wadgaon",
+//                 "Wadgaon Gadhave",
+//                 "Wadgaon Poste",
+//                 "Wai",
+//                 "Wakodi",
+//                 "Walki",
+//                 "Waradh",
+//                 "Warjai",
+//                 "Warud",
+//                 "Watfal",
+//                 "Yelguda",
+//                 "Zombhadi",
+//             ];
+
+//             return res.render('admindashboard', {
+//                 user: req.session.user,
+//                 farmerCount,
+//                 userCount,
+//                 fieldOfficerCount,
+//                 assistantCoordinatorCount,
+//                 projectCoordinatorCount,
+//                 filteredFarmerCount,
+//                 selectedVillage: village || '',
+//                 villageslist,
+//                 monthlyFarmerData: JSON.stringify(monthlyFarmerData) // Ensure it's passed as JSON string
+//             });
+//         } else {
+//             req.flash('error', 'Please log in first');
+//             return res.redirect('/');
+//         }
+//     } catch (error) {
+//         console.error('Error in AdminDashboard:', error);
+//         req.flash('error', 'Internal server error');
+//         return res.redirect('/');
 //     }
-
-//     // Render the admin dashboard if the user is authenticated
-//     res.render('admindashboard', { user });
 // };
 
+// AdminDashboard Controller
 export const AdminDashboard = async (req, res) => {
     try {
         if (req.session.user) {
+            // Fetch all farmers and users
             const farmersList = await farmers.findAll();
-
             const userList = await UserModel.findAll();
+
+            // Count different user roles
             const fieldOfficerCount = await UserModel.count({ where: { Role: 'Field Officer' } });
             const assistantCoordinatorCount = await UserModel.count({ where: { Role: 'Assistant Project Coordinator' } });
             const projectCoordinatorCount = await UserModel.count({ where: { Role: 'Project Coordinator' } });
 
-
+            // Count total farmers and users
             const farmerCount = farmersList.length;
             const userCount = userList.length;
 
+            // Extract filters from query parameters
+            const village = req.query.village || "Borjai"; // Default to "Borjai"
+            const year = req.query.year || new Date().getFullYear(); // Default to current year
+            let error = null;
 
+            // Filtered farmer count
+            const filteredFarmerCount = await farmers.count({
+                where: {
+                    villageName: village,
+                    [sequelize.Op.and]: sequelize.where(
+                        sequelize.fn('YEAR', sequelize.col('createdAt')),
+                        year
+                    ),
+                },
+            });
 
+            // Monthly farmer data
+            const monthlyFarmerData = await getMonthlyFarmerData(village, year);
+
+            // Set error message if no data is found
+            if (filteredFarmerCount === 0) {
+                error = `No data found for the selected filters: Village - ${village}, Year - ${year}.`;
+            }
+
+            // Adjust monthly farmer data to include the month numbers
+            const adjustedMonthlyFarmerData = monthlyFarmerData.map((val, index) => ({
+                month: index + 1,  // Month number added here
+                count: val         // The count for that month
+            }));
+
+            // List of villages and years for dropdowns
+            const villageslist = [
+                "Aajani",
+                "Aajanti",
+                "Aashti",
+                "Aasola",
+                "Adani",
+                "Adani Pod",
+                "Amala Gav",
+                "Amala Tanda",
+                "Amshet",
+                "Anji",
+                "Anuppod",
+                "Arambhi",
+                "Athmurdi",
+                "Banayat",
+                "Bandar",
+                "Baradgaon",
+                "Bechkheda",
+                "Belora",
+                "Bhamb Raja",
+                "Bhurkipod",
+                "Bodgavhan",
+                "Borgaon",
+                "Bori Chandra",
+                "Bori Gosavi",
+                "Bori Sinha",
+                "Borjai",
+                "Bramhanpur",
+                "Bramhanwada",
+                "Bramhanwada Purv",
+                "Bramhanwada Tanda",
+                "Bramhi",
+                "Chandapur",
+                "Chani",
+                "Chauki",
+                "Chauki Zuli",
+                "Chikani",
+                "Chikhali",
+                "Chinchala",
+                "Chinchamandal",
+                "Chopan",
+                "Churkuta",
+                "Dabha",
+                "Daheli",
+                "Dahifal",
+                "Deurwadi",
+                "Devala",
+                "Devdharui",
+                "Dhaipod",
+                "Dhanaj",
+                "Dharanpod",
+                "Domaga",
+                "Dongargaon",
+                "Dudhgav",
+                "Echora",
+                "Fulwadi",
+                "Gadegao",
+                "Gajipur",
+                "Garpod",
+                "Gaulpend",
+                "Gaurala",
+                "Gavpod",
+                "Ghubadheti",
+                "Gondegaon",
+                "Gondgavhan",
+                "Gunj",
+                "Haru",
+                "Hatgaon",
+                "Hivara",
+                "Indrathana",
+                "Jambhora",
+                "Jamwadi",
+                "Jankai",
+                "Kamathwada",
+                "Kanada",
+                "Kanala",
+                "Kanzara",
+                "Kapshi",
+                "Karamala",
+                "Khairgaon",
+                "Khairgaon Pod",
+                "Khairgaon Tanda",
+                "Khandani",
+                "Khatara",
+                "Kinhi Walashi",
+                "Krushnapur",
+                "Kumbhari",
+                "Kumbhipod",
+                "Ladkhed",
+                "Lakhmapur",
+                "Lohatwadi",
+                "Loni",
+                "Majara",
+                "Malkhed Bu.",
+                "Malkinho",
+                "Mangla Devi",
+                "Mangrul",
+                "Manikwada",
+                "Manjarda",
+                "Mardi",
+                "Maregaon",
+                "Masola",
+                "Mendhala",
+                "Mendhani",
+                "Morath",
+                "Morgavhan",
+                "Mozar",
+                "Mukindpur",
+                "Munjhala",
+                "Murli",
+                "Nababpur",
+                "Nagai",
+                "Nageshvar",
+                "Nait",
+                "Naka Pardi",
+                "Narkund",
+                "Narsapur",
+                "Ner",
+                "Pahapal",
+                "Palaskund",
+                "Pandharkawada",
+                "Pandhurbna",
+                "Pandhurna Budruk",
+                "Pandhurna Khurd",
+                "Pangari",
+                "Pangari Tanda",
+                "Paradhi Beda",
+                "Pardhi Tanda",
+                "Pathari",
+                "Pathrad Gole",
+                "Pendhara",
+                "Pimpalgaon",
+                "Pimpari Ijara",
+                "Pisgaon",
+                "Prathrad Devi",
+                "Ramnagar Tanda",
+                "Rui",
+                "Sajegaon",
+                "Salaipod",
+                "Salod",
+                "Sarangpur",
+                "Sarkinhi",
+                "Satefal",
+                "Savangi",
+                "Sawala",
+                "Sawana",
+                "Sawanga",
+                "Sawargaon",
+                "Sawargaon Kale",
+                "Saykheda",
+                "Sevadas Nagar",
+                "Shakalgaon",
+                "Shankarpur",
+                "Shelodi",
+                "Shindi",
+                "Shirpurwadi",
+                "Shivani",
+                "Shivpod",
+                "Singaldip",
+                "Sonegaon",
+                "Sonupod",
+                "Sonurli",
+                "Surdevi",
+                "Takali",
+                "Tembhi",
+                "Thalegaon",
+                "Tiwasa",
+                "Uchegaon",
+                "Udapur",
+                "Ujona",
+                "Umari",
+                "Umartha",
+                "Vasantnagar",
+                "Veni",
+                "Virgavhan",
+                "Vyahali",
+                "Wadgaon",
+                "Wadgaon Gadhave",
+                "Wadgaon Poste",
+                "Wai",
+                "Wakodi",
+                "Walki",
+                "Waradh",
+                "Warjai",
+                "Warud",
+                "Watfal",
+                "Yelguda",
+                "Zombhadi",
+            ];
+
+            const yearsList = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i); // Last 10 years
+
+            // Render admin dashboard
             return res.render('admindashboard', {
                 user: req.session.user,
-                farmerCount: farmerCount,
-                userCount: userCount,
+                farmerCount,
+                userCount,
                 fieldOfficerCount,
                 assistantCoordinatorCount,
-                projectCoordinatorCount
-
+                projectCoordinatorCount,
+                filteredFarmerCount,
+                selectedVillage: village,
+                selectedYear: year,
+                villageslist,
+                yearsList,
+                monthlyFarmerData: JSON.stringify(adjustedMonthlyFarmerData),  // Pass the adjusted data
+                error,
             });
         } else {
-            // If session does not exist, redirect to login page
             req.flash('error', 'Please log in first');
             return res.redirect('/');
         }
@@ -285,11 +630,39 @@ export const AdminDashboard = async (req, res) => {
     }
 };
 
+// Function to get monthly farmer data
+const getMonthlyFarmerData = async (village, year) => {
+    const data = await farmers.findAll({
+        attributes: [
+            [sequelize.fn('MONTH', sequelize.col('createdAt')), 'month'],
+            [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+        ],
+        where: {
+            villageName: village,
+            [sequelize.Op.and]: sequelize.where(
+                sequelize.fn('YEAR', sequelize.col('createdAt')),
+                year
+            ),
+        },
+        group: ['month'],
+        order: ['month'],
+    });
+
+    // Initialize data for all months with 0
+    const monthlyData = Array(12).fill(0);
+    data.forEach((item) => {
+        monthlyData[item.dataValues.month - 1] = item.dataValues.count; // Month is 1-indexed
+    });
+
+    return monthlyData;
+};
+
+
+
 export const changepassword = async (req, res) => {
     const { id } = req.params;
     res.render('changepassword');
 };
-
 
 export const UpdatePassword = async (req, res) => {
     try {
@@ -335,88 +708,11 @@ export const UpdatePassword = async (req, res) => {
         res.redirect(`/changepassword/${userId}`);
     }
 };
-
 // user api
 export const adduser = async (req, res) => {
     res.render('adduser');
 
 };
-
-// export const UserRegister = async (req, res) => {
-//     try {
-//         const { fullname, emailid, password, phonenumber, address, role, dob, qualification } = req.body;
-//         let profileimage = null;
-
-//         // Validate input
-//         if (!fullname || !emailid || !password || !phonenumber || !address || !role || !dob || !qualification) {
-//             req.flash('error', 'All fields are required');
-//             return res.status(400).redirect('/adduser');
-
-//         }
-
-//         // Validate email format
-//         const emailRegex = /^\w+([\.-]?\w+)@\w+([\. -]?\w+)(\.\w{2,3})+$/;
-//         if (!emailRegex.test(emailid)) {
-//             req.flash('error', 'Email is not valid');
-//             return res.status(400).redirect('/adduser');
-//         }
-
-//         // Check for duplicate email
-//         const isDuplicateEmail = await UserModel.findOne({ where: { emailid } });
-//         if (isDuplicateEmail) {
-//             req.flash('error', 'Email already exists');
-//             return res.status(400).redirect('/adduser');
-
-//         }
-
-//         // Hash password
-//         const salt = await bcrypt.genSalt(10);
-//         const hashedPassword = await bcrypt.hash(password, salt);
-
-//         // If a profile image is uploaded, store only the file name
-//         if (req.file) {
-//             profileimage = path.basename(req.file.path);  // Save only the file name (e.g., 'image-xyz.jpg')
-//         }
-
-//         // Create new user
-//         const newUser = await UserModel.create({
-//             profileimage,
-//             fullname,
-//             emailid,
-//             password: hashedPassword,
-//             phonenumber,
-//             address,
-//             role,
-//             dob,
-//             qualification
-//         });
-
-
-//         return res.status(500).redirect('/userlist');
-
-//         return res.status(201).send({
-//             status: true,
-//             message: "User created successfully",
-//             user: {
-//                 id: newUser.id,
-//                 fullname: newUser.fullname,
-//                 emailid: newUser.emailid,
-//                 phonenumber: newUser.phonenumber,
-//                 address: newUser.address,
-//                 role: newUser.role,
-//                 dob: newUser.dob,
-//                 qualification: newUser.qualification,
-//                 profileimage: newUser.profileimage  // This will only contain the file name
-//             }
-//         });
-
-//     } catch (err) {
-//         console.error(err);
-//         req.flash('error', 'Error creating user');
-//         return res.status(500).redirect('/adduser');
-//         return res.status(500).send({ message: 'Error creating user', err: err.message });
-//     }
-// };
 
 export const UserRegister = async (req, res) => {
     try {
@@ -531,14 +827,6 @@ export const DeleteFarmerById = async (req, res) => {
         return res.status(500).redirect('/farmerlist');
     }
 };
-
-export const getfarmerbyid = async (req, res) => {
-    res.render('editfarmer');
-
-};
-
-
-
 
 export const DeleteUserById = async (req, res) => {
     try {
@@ -729,88 +1017,123 @@ export const details = async (req, res) => {
 }
 
 // export const getProductionAndCultivationById = async (req, res) => {
-//   try {
-//     const { farmerID } = req.params;
+//     try {
+//         const { farmerID } = req.params;
 
-//     // Fetch data from the database
-//     const rawCultivationCosts = await CultivationCost.findAll({ where: { farmerID } });
-//     const rawProductionDetails = await ProductionDetails.findAll({ where: { farmerID } });
+//         // Fetch data from the database
+//         const rawCultivationCosts = await CultivationCost.findAll({ where: { farmerID } });
+//         const rawProductionDetails = await ProductionDetails.findAll({ where: { farmerID } });
 
-//     // Parse nested JSON for cultivation costs
-//     const cultivationCosts = rawCultivationCosts.map(cost => ({
-//       ...cost.toJSON(),
-//       crops: JSON.parse(cost.crops), // Parse crops field as JSON
-//     }));
+//         // Parse nested JSON for cultivation costs
+//         const cultivationCosts = rawCultivationCosts.map(cost => ({
+//             ...cost.toJSON(),
+//             crops: JSON.parse(cost.crops), // Parse crops field as JSON
+//         }));
 
-//     // Parse nested JSON for production details
-//     const productionDetails = rawProductionDetails.map(detail => {
-//       let parsedCropName;
-//       try {
-//         parsedCropName = JSON.parse(detail.cropName); // Attempt to parse as JSON
-//       } catch {
-//         parsedCropName = detail.cropName; // Fallback to raw string if JSON parse fails
-//       }
-//       return {
-//         ...detail.toJSON(),
-//         cropName: parsedCropName,
-//       };
-//     });
+//         // Parse nested JSON for production details
+//         const productionDetails = rawProductionDetails.map(detail => {
+//             let parsedCropName;
+//             try {
+//                 parsedCropName = JSON.parse(detail.cropName); // Attempt to parse as JSON
+//             } catch {
+//                 parsedCropName = detail.cropName; // Fallback to raw string if JSON parse fails
+//             }
+//             return {
+//                 ...detail.toJSON(),
+//                 cropName: parsedCropName, // Parsed JSON or raw string
+//             };
+//         });
 
-//     const responseData = {
-//       cultivationCosts,
-//       productionDetails,
-//     };
+//         const responseData = {
+//             cultivationCosts,
+//             productionDetails,
+//         };
 
-//     // Render the Handlebars template with data
-//     res.render('detailofproductionandcultivation', { data: responseData });
-//   } catch (error) {
-//     console.error("Error fetching farmer details:", error);
-//     res.status(500).json({ success: false, message: "Internal server error", error: error.message });
-//   }
+//         res.status(200).json({
+//             data:responseData
+//         })
+
+//         //console.log("Response Data:", JSON.stringify(responseData, null, 2)); // Debugging
+//         // Render the Handlebars template with data
+//        // res.render('detailofproductionandcultivation', { data: responseData });
+//     } catch (error) {
+//         console.error("Error fetching farmer details:", error);
+//         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+//     }
 // };
+
+
 
 export const getProductionAndCultivationById = async (req, res) => {
     try {
         const { farmerID } = req.params;
 
-        // Fetch data from the database
         const rawCultivationCosts = await CultivationCost.findAll({ where: { farmerID } });
         const rawProductionDetails = await ProductionDetails.findAll({ where: { farmerID } });
 
-        // Parse nested JSON for cultivation costs
         const cultivationCosts = rawCultivationCosts.map(cost => ({
             ...cost.toJSON(),
-            crops: JSON.parse(cost.crops), // Parse crops field as JSON
+            crops: JSON.parse(cost.crops), 
         }));
 
-        // Parse nested JSON for production details
         const productionDetails = rawProductionDetails.map(detail => {
             let parsedCropName;
             try {
-                parsedCropName = JSON.parse(detail.cropName); // Attempt to parse as JSON
+                parsedCropName = JSON.parse(detail.cropName); 
             } catch {
-                parsedCropName = detail.cropName; // Fallback to raw string if JSON parse fails
+                parsedCropName = detail.cropName; 
             }
             return {
                 ...detail.toJSON(),
-                cropName: parsedCropName, // Parsed JSON or raw string
+                cropName: parsedCropName, 
             };
+        });
+
+        // Calculate profit/loss for each crop
+        const profitLossData = [];
+
+        cultivationCosts.forEach(cultivation => {
+            const cropDetails = cultivation.crops;
+            const matchingProduction = productionDetails.find(production =>
+                production.cropName.name === cropDetails.crop &&
+                production.cropName.season === cropDetails.season &&
+                production.cropName.irrigationType === cropDetails.category
+            );
+
+            if (matchingProduction) {
+                const { totalCost: cultivationCost } = cropDetails;
+                const { totalCost: productionCost } = matchingProduction.cropName;
+
+                const profitOrLoss = productionCost - cultivationCost;
+                const profitOrLossPercentage = ((profitOrLoss / cultivationCost) * 100).toFixed(2);
+
+                profitLossData.push({
+                    season: cropDetails.season,
+                    irrigationType: cropDetails.category,
+                    crop: cropDetails.crop,
+                    cultivationCost,
+                    productionCost,
+                    profitOrLoss,
+                    profitOrLossPercentage: `${profitOrLossPercentage}%`,
+                });
+            }
         });
 
         const responseData = {
             cultivationCosts,
             productionDetails,
+            profitLossData,
         };
 
-        console.log("Response Data:", JSON.stringify(responseData, null, 2)); // Debugging
+         console.log("Response Data:", JSON.stringify(responseData, null, 2)); // Debugging
         // Render the Handlebars template with data
-        res.render('detailofproductionandcultivation', { data: responseData });
+       res.render('detailofproductionandcultivation', { data: responseData });
+        
     } catch (error) {
         console.error("Error fetching farmer details:", error);
         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
 };
-
 
 export const getAllFieldWorkerWorkDetails = async (req, res) => {
     try {
@@ -839,6 +1162,381 @@ export const getAllFieldWorkerWorkDetails = async (req, res) => {
         });
     }
 };
+
+export const getfarmerbyid = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({ success: false, message: "Farmer ID is required" });
+        }
+
+        const farmer = await farmers.findByPk(id);
+
+        if (!farmer) {
+            return res.status(404).render('editfarmer', {
+                success: false,
+                message: "Farmer not found",
+                farmer: null,
+            });
+        }
+
+        // Parse `cropsSown` JSON field
+        const parsedCropsSown = farmer.cropsSown ? JSON.parse(farmer.cropsSown) : {};
+
+        // Dynamic list of districts
+        const districts = ["yavatmal", "washim"];
+
+        const taluka = ["Arni", "Darwha", "Digras", "Ghatanji", "Kalamb", "Kelapur", "Mahagaon", "Maregaon", "Ner", "Ralegaon", "Yavatmal"];
+        const village = [
+            "Aajani",
+            "Aajanti",
+            "Aashti",
+            "Aasola",
+            "Adani",
+            "Adani Pod",
+            "Amala Gav",
+            "Amala Tanda",
+            "Amshet",
+            "Anji",
+            "Anuppod",
+            "Arambhi",
+            "Athmurdi",
+            "Banayat",
+            "Bandar",
+            "Baradgaon",
+            "Bechkheda",
+            "Belora",
+            "Bhamb Raja",
+            "Bhurkipod",
+            "Bodgavhan",
+            "Borgaon",
+            "Bori Chandra",
+            "Bori Gosavi",
+            "Bori Sinha",
+            "Borjai",
+            "Bramhanpur",
+            "Bramhanwada",
+            "Bramhanwada Purv",
+            "Bramhanwada Tanda",
+            "Bramhi",
+            "Chandapur",
+            "Chani",
+            "Chauki",
+            "Chauki Zuli",
+            "Chikani",
+            "Chikhali",
+            "Chinchala",
+            "Chinchamandal",
+            "Chopan",
+            "Churkuta",
+            "Dabha",
+            "Daheli",
+            "Dahifal",
+            "Deurwadi",
+            "Devala",
+            "Devdharui",
+            "Dhaipod",
+            "Dhanaj",
+            "Dharanpod",
+            "Domaga",
+            "Dongargaon",
+            "Dudhgav",
+            "Echora",
+            "Fulwadi",
+            "Gadegao",
+            "Gajipur",
+            "Garpod",
+            "Gaulpend",
+            "Gaurala",
+            "Gavpod",
+            "Ghubadheti",
+            "Gondegaon",
+            "Gondgavhan",
+            "Gunj",
+            "Haru",
+            "Hatgaon",
+            "Hivara",
+            "Indrathana",
+            "Jambhora",
+            "Jamwadi",
+            "Jankai",
+            "Kamathwada",
+            "Kanada",
+            "Kanala",
+            "Kanzara",
+            "Kapshi",
+            "Karamala",
+            "Khairgaon",
+            "Khairgaon Pod",
+            "Khairgaon Tanda",
+            "Khandani",
+            "Khatara",
+            "Kinhi Walashi",
+            "Krushnapur",
+            "Kumbhari",
+            "Kumbhipod",
+            "Ladkhed",
+            "Lakhmapur",
+            "Lohatwadi",
+            "Loni",
+            "Majara",
+            "Malkhed Bu.",
+            "Malkinho",
+            "Mangla Devi",
+            "Mangrul",
+            "Manikwada",
+            "Manjarda",
+            "Mardi",
+            "Maregaon",
+            "Masola",
+            "Mendhala",
+            "Mendhani",
+            "Morath",
+            "Morgavhan",
+            "Mozar",
+            "Mukindpur",
+            "Munjhala",
+            "Murli",
+            "Nababpur",
+            "Nagai",
+            "Nageshvar",
+            "Nait",
+            "Naka Pardi",
+            "Narkund",
+            "Narsapur",
+            "Ner",
+            "Pahapal",
+            "Palaskund",
+            "Pandharkawada",
+            "Pandhurbna",
+            "Pandhurna Budruk",
+            "Pandhurna Khurd",
+            "Pangari",
+            "Pangari Tanda",
+            "Paradhi Beda",
+            "Pardhi Tanda",
+            "Pathari",
+            "Pathrad Gole",
+            "Pendhara",
+            "Pimpalgaon",
+            "Pimpari Ijara",
+            "Pisgaon",
+            "Prathrad Devi",
+            "Ramnagar Tanda",
+            "Rui",
+            "Sajegaon",
+            "Salaipod",
+            "Salod",
+            "Sarangpur",
+            "Sarkinhi",
+            "Satefal",
+            "Savangi",
+            "Sawala",
+            "Sawana",
+            "Sawanga",
+            "Sawargaon",
+            "Sawargaon Kale",
+            "Saykheda",
+            "Sevadas Nagar",
+            "Shakalgaon",
+            "Shankarpur",
+            "Shelodi",
+            "Shindi",
+            "Shirpurwadi",
+            "Shivani",
+            "Shivpod",
+            "Singaldip",
+            "Sonegaon",
+            "Sonupod",
+            "Sonurli",
+            "Surdevi",
+            "Takali",
+            "Tembhi",
+            "Thalegaon",
+            "Tiwasa",
+            "Uchegaon",
+            "Udapur",
+            "Ujona",
+            "Umari",
+            "Umartha",
+            "Vasantnagar",
+            "Veni",
+            "Virgavhan",
+            "Vyahali",
+            "Wadgaon",
+            "Wadgaon Gadhave",
+            "Wadgaon Poste",
+            "Wai",
+            "Wakodi",
+            "Walki",
+            "Waradh",
+            "Warjai",
+            "Warud",
+            "Watfal",
+            "Yelguda",
+            "Zombhadi",
+        ];
+
+        const clusterName = [
+            "Masola",
+            "Bori Chandra",
+            "Bramhi",
+            "Chaani (ka)",
+            "Malkhed Bu.",
+            "Pathrad Devi",
+            "Arambhi",
+            "Murali",
+            "Umari",
+            "Adani",
+            "Veni",
+            "Chinchala",
+            "Khandani",
+            "Mardi",
+            "Ner",
+            "Pathrad Gole",
+            "Tembhi",
+            "Palaskund",
+            "Bori Sinha",
+            "Rui",
+        ];
+
+        const typeOfLand = ["Clayey", "Sandy Loam", "Sandy"];
+
+        const conservationMeasureItems = ["Trenching", "Farm Pond", "Bunding"];
+
+        const microIrrigation = ["Drip", "Sprinklers"];
+
+        const sourceIrrigationItems = ["Well", "Canal"];
+
+
+
+        // Send parsed data and districts to frontend
+        res.render('editfarmer', {
+            success: true,
+            farmer: { ...farmer.toJSON(), cropsSown: parsedCropsSown },
+            districts,
+            taluka,
+            village,
+            clusterName,
+            typeOfLand,
+            conservationMeasureItems,
+            microIrrigation,
+            sourceIrrigationItems,
+
+        });
+    } catch (error) {
+        console.error("Error fetching farmer details:", error);
+        res.status(500).render('editfarmer', {
+            success: false,
+            message: "Internal server error",
+            farmer: null,
+        });
+    }
+};
+
+export const AdminUpdateFarmer = async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        const {
+            farmerID,
+            newname,
+            mobileNumber,
+            emailID,
+            villagename,
+            taluka,
+            clusterName,
+            district,
+            cultivatedLand,
+            desiBreeds,
+            typeOfLand,
+            sourceIrrigationItems,
+            conservationMeasureItems,
+            microIrrigation,
+            ...flattenedCropsSown
+        } = req.body;
+
+        console.log("Request body data:", req.body);
+
+        // Transform the flattened `cropsSown` fields into a nested object
+        const cropsSown = {};
+        Object.keys(flattenedCropsSown).forEach((key) => {
+            if (key.startsWith("cropsSown.")) {
+                const path = key.replace("cropsSown.", "").split(".");
+                let current = cropsSown;
+
+                path.forEach((segment, index) => {
+                    if (index === path.length - 1) {
+                        // Assign the value at the final segment
+                        if (!current[segment]) current[segment] = [];
+                        const [crop, cropLand] = flattenedCropsSown[key];
+                        current[segment].push({ crop, cropLand });
+                    } else {
+                        // Ensure the object exists for intermediate segments
+                        current[segment] = current[segment] || {};
+                        current = current[segment];
+                    }
+                });
+            }
+        });
+
+        console.log("Transformed cropsSown data:", cropsSown);
+
+        // Find the farmer record by ID
+        const farmer = await farmers.findByPk(id);
+        if (!farmer) {
+            req.flash('error', 'Farmer not found');
+            return res.status(404).redirect('/farmerlist');
+        }
+
+        // Update fields
+        farmer.farmerID = farmerID;
+        farmer.name = newname;
+        farmer.mobileNumber = mobileNumber;
+        farmer.emailID = emailID;
+        farmer.villageName = villagename;
+        farmer.taluka = taluka;
+        farmer.clusterName = clusterName;
+        farmer.district = district;
+        farmer.cultivatedLand = cultivatedLand;
+        farmer.desiBreeds = desiBreeds;
+        farmer.typeOfLand = typeOfLand;
+        farmer.sourceIrrigationItems = sourceIrrigationItems;
+        farmer.conservationMeasureItems = conservationMeasureItems;
+        farmer.microIrrigation = microIrrigation;
+
+        if (Object.keys(cropsSown).length > 0) {
+            try {
+                farmer.cropsSown = cropsSown;
+            } catch (err) {
+                console.error('Failed to stringify cropsSown:', err.message);
+                req.flash('error', 'Invalid cropsSown format');
+                return res.redirect(`/editfarmer/${id}`);
+            }
+        }
+
+        console.log("Updated farmer data:", farmer);
+
+        await farmer.save();
+
+        req.flash('success', 'Farmer details updated successfully');
+        return res.redirect('/farmerlist');
+    } catch (error) {
+        console.error('Error updating farmer:', error.message);
+        req.flash('error', 'An error occurred while updating farmer details');
+        return res.redirect(`/editfarmer/${req.params.id}`);
+    }
+};
+
+
+
+
+
+
+
+
+
 
 
 

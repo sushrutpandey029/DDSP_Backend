@@ -3829,11 +3829,13 @@ div.hopscotch-bubble .hopscotch-bubble-container .hopscotch-actions .hopscotch-n
 
 /*Card*/
 .card {
-    border-color: #eaeaea;
+    border-color: #bee1e2;
     box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
     margin-bottom: .875rem;
     border-radius: 0.5rem;
+    height: 100%;
 }
+.card
 
     .card .card-header {
         background: transparent;
@@ -24404,6 +24406,17 @@ Project:	Jampack
 .aksa-wrapper[data-navbar-style="collapsed"] .integrationsapp-wrap {
     height: 100vh;
 }
+
+
+
+
+/**************dashboard*********************/
+.select-village{padding: 1.5em;     background-color: #fffcf1; border-radius: 16px;     border:1px solid #bee1e2;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);}
+
+
+
+
 
 @media (max-width: 991px) {
     .integrationsapp-wrap .integrationsapp-sidebar {
