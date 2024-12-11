@@ -43,9 +43,6 @@ const Location = sequelize.define('user_locations', {
         type: DataTypes.DATE,
         defaultValue: sequelize.NOW,
     },
-}, {
-    tableName: 'user_locations',
-    timestamps: true,
 });
 
 export default Location;

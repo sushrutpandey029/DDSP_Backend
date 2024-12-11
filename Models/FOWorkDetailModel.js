@@ -3,11 +3,6 @@ import sequelize from "../DB_Connection/MySql_Connect.js"; // Make sure to impor
 
 // Define the FieldWorkerWorkDetail model
 const FieldWorkerWorkDetail = sequelize.define('FieldWorkerWorkDetail', {
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-    },
     userid:{
         type: DataTypes.STRING,
         allowNull: false,
@@ -75,6 +70,7 @@ const FieldWorkerWorkDetail = sequelize.define('FieldWorkerWorkDetail', {
     inputSupplied: {
         type: DataTypes.JSON, 
         allowNull: true,
+        defaultValue: {},
     },
     consultancyTelephone: {
         type: DataTypes.INTEGER,
@@ -88,9 +84,6 @@ const FieldWorkerWorkDetail = sequelize.define('FieldWorkerWorkDetail', {
         type: DataTypes.INTEGER,
         defaultValue: 0, 
     },
-}, {
-    timestamps: true,  
-    tableName: 'field_worker_work_details', 
 });
 
 
