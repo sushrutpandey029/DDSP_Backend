@@ -35,6 +35,10 @@ const Location = sequelize.define('user_locations', {
         type: DataTypes.FLOAT,
         allowNull: false,
     },
+    address:{
+        type: DataTypes.STRING,
+        allowNull : true
+    },
     timestamp: {
         type: DataTypes.DATE,
         defaultValue: sequelize.NOW,

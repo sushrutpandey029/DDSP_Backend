@@ -1,6 +1,6 @@
-{{>header user=user}}
+{{>header user=user farmersList=farmersList}}
 
-{{>verticalnav}}
+{{>verticalnav farmersList=farmersList}}
 
 <div class="hk-pg-wrapper">
     <div class="container-xxl">
@@ -43,29 +43,39 @@
         </div>
 
         <!-- Village Filter Section -->
-        <div class="mt-4">
+        <div class="mt-4 row">
             <div class="col-md-6">
                 <div class="select-village">
                     <form action="/dashboard" method="get" class="row g-3">
-                       
-                        <div class="d-flex">
-                            <label for="village" class="form-label"><h6>Village:</h6></label>
-                            <select name="village" id="village" class="form-select">
-                                {{#each villageslist}}
-                                <option value="{{this}}" {{#if (eq ../selectedVillage this)}}selected{{/if}}>{{this}}
-                                </option>
-                                {{/each}}
-                            </select>
 
-                            <label for="year" class="form-label"><h6>Year:</h6></label>
+                        <div class="row">
+                            <div class="col-sm-5">
+                                    <label for="village" class="form-label mb-0">
+                                        Village
+                                    </label>
+                                    <select name="village" id="village" class="form-select">
+                                        {{#each villageslist}}
+                                        <option value="{{this}}" {{#if (eq ../selectedVillage this)}}selected{{/if}}>
+                                            {{this}}
+                                        </option>
+                                        {{/each}}
+                                    </select>
+                            </div>
+
+                            <div class="col-sm-5">
+                            <label for="year" class="form-label mb-0">
+                                Year
+                            </label>
                             <select name="year" id="year" class="form-select">
                                 {{#each yearsList}}
                                 <option value="{{this}}" {{#if (eq ../selectedYear this)}}selected{{/if}}>{{this}}
                                 </option>
                                 {{/each}}
                             </select>
-
-                            <button type="submit" class="ms-4 btn btn-primary">Filter</button>
+                            </div>
+                            <div class="col-sm-2 align-self-center">
+                                <label visible="hidden" ></label>
+                            <button type="submit" class="ms-4 btn btn-primary">Filter</button></div>
                         </div>
                     </form>
 
@@ -89,13 +99,35 @@
                     <div class="mt-4">
                         <canvas id="monthlyFarmerChart"></canvas>
                     </div>
+
+
+
                 </div>
             </div>
+
+            <div class="col-md-6" style="max-width:435px;">
+                <div class="select-village">
+                    <h5 style="text-align: center;">Role Distribution</h5>
+                    <div class="mt-4">
+                        <canvas id="roleDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
+
+
+
+
+
+
+
+
 <script>
     const ctx = document.getElementById('monthlyFarmerChart').getContext('2d');
+
     const monthlyFarmerData = JSON.parse('{{{monthlyFarmerData}}}');
 
     // Extract labels and data for the chart
@@ -142,7 +174,54 @@
                 }
             }
         }
-    });
+    });  
 </script>
+
+<script>
+    const roleDistributionData = JSON.parse('{{{roleDistributionData}}}');
+    const roleDistributionChartCtx = document.getElementById('roleDistributionChart').getContext('2d');
+
+    const roleDistributionChart = new Chart(roleDistributionChartCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Field Officer', 'Assistant Project Coordinator', 'Project Coordinator'],
+            datasets: [{
+                label: 'Role Distribution',
+                data: [
+                    roleDistributionData.fieldOfficer,
+                    roleDistributionData.assistantCoordinator,
+                    roleDistributionData.projectCoordinator
+                ],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.5)',
+                    'rgba(153, 102, 255, 0.5)',
+                    'rgba(255, 159, 64, 0.5)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+</script>
+
+
+
+
+
+
+
 
 {{>footer}}

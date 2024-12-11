@@ -617,6 +617,12 @@ export const AdminDashboard = async (req, res) => {
                 villageslist,
                 yearsList,
                 monthlyFarmerData: JSON.stringify(adjustedMonthlyFarmerData),  // Pass the adjusted data
+                roleDistributionData: JSON.stringify({
+                    fieldOfficer: fieldOfficerCount,
+                    assistantCoordinator: assistantCoordinatorCount,
+                    projectCoordinator: projectCoordinatorCount
+                }),
+                farmersList,
                 error,
             });
         } else {
@@ -656,8 +662,6 @@ const getMonthlyFarmerData = async (village, year) => {
 
     return monthlyData;
 };
-
-
 
 export const changepassword = async (req, res) => {
     const { id } = req.params;
@@ -848,6 +852,28 @@ export const DeleteUserById = async (req, res) => {
         console.error("Error deleting user:", error);
         req.flash('error', 'Internal server error');
         return res.status(500).redirect('/userlist');
+    }
+};
+
+export const DeleteFieldOfficerWorkDetailById = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        const deletedUser = await FieldWorkerWorkDetail.destroy({
+            where: { id: userId }
+        });
+
+        if (!deletedUser) {
+
+            req.flash('error', 'Work Detail not found');
+            return res.redirect('/getAllFieldWorkerWorkDetails');
+        }
+        req.flash('success', 'Work Detail deleted successfully');
+        return res.redirect('/getAllFieldWorkerWorkDetails');
+    } catch (error) {
+        console.error("Error deleting Work Detail:", error);
+        req.flash('error', 'Internal server error');
+        return res.status(500).redirect('/getAllFieldWorkerWorkDetails');
     }
 };
 
@@ -1063,7 +1089,6 @@ export const details = async (req, res) => {
 // };
 
 
-
 export const getProductionAndCultivationById = async (req, res) => {
     try {
         const { farmerID } = req.params;
@@ -1073,19 +1098,19 @@ export const getProductionAndCultivationById = async (req, res) => {
 
         const cultivationCosts = rawCultivationCosts.map(cost => ({
             ...cost.toJSON(),
-            crops: JSON.parse(cost.crops), 
+            crops: JSON.parse(cost.crops),
         }));
 
         const productionDetails = rawProductionDetails.map(detail => {
             let parsedCropName;
             try {
-                parsedCropName = JSON.parse(detail.cropName); 
+                parsedCropName = JSON.parse(detail.cropName);
             } catch {
-                parsedCropName = detail.cropName; 
+                parsedCropName = detail.cropName;
             }
             return {
                 ...detail.toJSON(),
-                cropName: parsedCropName, 
+                cropName: parsedCropName,
             };
         });
 
@@ -1125,10 +1150,10 @@ export const getProductionAndCultivationById = async (req, res) => {
             profitLossData,
         };
 
-         console.log("Response Data:", JSON.stringify(responseData, null, 2)); // Debugging
+        console.log("Response Data:", JSON.stringify(responseData, null, 2)); // Debugging
         // Render the Handlebars template with data
-       res.render('detailofproductionandcultivation', { data: responseData });
-        
+        res.render('detailofproductionandcultivation', { data: responseData });
+
     } catch (error) {
         console.error("Error fetching farmer details:", error);
         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
@@ -1148,6 +1173,10 @@ export const getAllFieldWorkerWorkDetails = async (req, res) => {
             });
         }
 
+        // res.status(200).json({
+        //     data:allWorkDetails
+        // })
+
         return res.render('farmerworkdetails', {
             success: true,
             message: "All field worker work details fetched successfully.",
@@ -1162,6 +1191,42 @@ export const getAllFieldWorkerWorkDetails = async (req, res) => {
         });
     }
 };
+
+export const editFieldWorkerWorkDetailsById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const workDetails = await FieldWorkerWorkDetail.findOne({ where: { id } });
+
+        if (!workDetails) {
+            return res.render('editfiledworkerdtail', {
+                success: false,
+                message: `No work details found for ID: ${id}`,
+                data: []
+            });
+        }
+
+        // res.status(200).json({
+        //     data:workDetails
+        // });
+
+        return res.render('editfiledworkerdtail', {
+            success: true,
+            message: `Work details for ID: ${id} fetched successfully.`,
+            data: workDetails
+        });
+    } catch (error) {
+        console.error(`Error fetching work details for ID: ${id}`, error);
+        return res.status(500).render('error', {
+            success: false,
+            message: `Error fetching work details for ID: ${id}.`,
+            error: error.message
+        });
+    }
+};
+
+
+
 
 export const getfarmerbyid = async (req, res) => {
     try {
@@ -1529,6 +1594,88 @@ export const AdminUpdateFarmer = async (req, res) => {
     }
 };
 
+
+
+
+
+
+// REPORT GENARATE FARMER BY CLUSTER WISE
+
+// export const getFarmersByCluster = async (req, res) => {
+//     try {
+//         const { clusterName } = req.params;
+
+//         if (!clusterName) {
+//             return res.status(400).json({ success: false, message: "Cluster name is required." });
+//         }
+
+//         const farmer = await farmers.findAll({
+//             where: { clusterName },
+//         });
+
+//         if (farmer.length === 0) {
+//             return res.render('clusterbyfarmer', {
+//                 success: false,
+//                 message: `No farmers found in cluster '${clusterName}'.`,
+//                 totalFarmers: 0,
+//                 data: [],
+//             });
+//         }
+
+//         const totalFarmers = farmer.length;
+
+//         res.render('clusterbyfarmer', {
+//             success: true,
+//             message: `Farmers in cluster '${clusterName}' retrieved successfully.`,
+//             totalFarmers,
+//             data: farmer,
+//         });
+//     } catch (error) {
+//         console.error("Error fetching farmers by cluster:", error);
+//         res.status(500).render('error', { message: "Internal server error", error: error.message });
+//     }
+// };
+
+
+export const getFarmersByCluster = async (req, res) => {
+    try {
+        const { clusterName } = req.query; // Retrieve clusterName from query parameters
+
+        if (!clusterName) {
+            return res.render('clusterbyfarmer', {
+                success: false,
+                message: "Please select a cluster name.",
+                totalFarmers: 0,
+                data: [],
+            });
+        }
+
+        const farmersData = await farmers.findAll({
+            where: { clusterName },
+        });
+
+        if (farmersData.length === 0) {
+            return res.render('custerbyfarmer', {
+                success: false,
+                message: `No farmers found in cluster '${clusterName}'.`,
+                totalFarmers: 0,
+                data: [],
+            });
+        }
+
+        const totalFarmers = farmersData.length;
+
+        res.render('custerbyfarmer', {
+            success: true,
+            message: `Farmers in cluster '${clusterName}' retrieved successfully.`,
+            totalFarmers,
+            data: farmersData,
+        });
+    } catch (error) {
+        console.error("Error fetching farmers by cluster:", error);
+        res.status(500).render('error', { message: "Internal server error", error: error.message });
+    }
+};
 
 
 

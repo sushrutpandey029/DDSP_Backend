@@ -1,6 +1,6 @@
-{{> header user=user }}
+{{> header user=user farmersList=farmersList}}
 
-{{> verticalnav }}
+{{> verticalnav farmersList=farmersList}}
 
 <div class="hk-pg-wrapper">
     <div class="container-xxl">
@@ -9,7 +9,7 @@
             <div class="d-flex align-items-center">
                 <a class="invoiceapp-title link-dark" data-bs-toggle="dropdown" href="#" role="button"
                     aria-haspopup="true" aria-expanded="false">
-                    <h1>Farmer Work Details</h1>
+                    <h1>Field Officer Work Details</h1>
                 </a>
             </div>
         </header>
@@ -68,7 +68,7 @@
                             {{/each}}
                         </td>
                         <td>{{this.totalConsultancy}}</td>
-                        <td><a href="/editWorkDetail/{{this.id}}" class="btn btn-sm btn-primary">Edit</a></td>
+                        <td><a href="/work_details/{{this.id}}" class="btn btn-sm btn-primary">Edit</a></td>
                         <td>
                             <a href="/deleteWorkDetail/{{this.id}}" class="btn btn-sm btn-danger" 
                                onclick="return confirm('Are you sure you want to delete this entry?');">Delete</a>

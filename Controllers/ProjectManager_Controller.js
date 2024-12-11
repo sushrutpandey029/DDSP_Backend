@@ -408,29 +408,6 @@ export const addCoordinatorWorkDetails = async (req, res) => {
     }
 };
 
-// export const getFarmerById = async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         if (!id) {
-//             return res.status(400).json({ success: false, message: "Farmer ID is required" });
-//         }
-//         const farmer = await Farmer.findByPk(id);
-//         if (!farmer) {
-//             return res.status(404).json({ success: false, message: "Farmer not found" });
-//         }
-//         const responseData = {
-//             cultivatedLand: farmer.cultivatedLand,
-//             clusterName: farmer.clusterName,
-//         };
-
-
-//         res.status(200).json({ success: true, data: responseData });
-//     } catch (error) {
-//         console.error("Error fetching farmer:", error);
-//         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
-//     }
-// };
-
 export const getFarmerById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -449,6 +426,280 @@ export const getFarmerById = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
 };
+
+
+// export const getFarmerById = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+
+//         if (!id) {
+//             return res.status(400).json({ success: false, message: "Farmer ID is required" });
+//         }
+
+//         const farmer = await farmers.findByPk(id);
+
+//         if (!farmer) {
+//             return res.status(404).render('editfarmer', {
+//                 success: false,
+//                 message: "Farmer not found",
+//                 farmer: null,
+//             });
+//         }
+
+//         // Parse `cropsSown` JSON field
+//         const parsedCropsSown = farmer.cropsSown ? JSON.parse(farmer.cropsSown) : {};
+
+//         // Dynamic list of districts
+//         const districts = ["yavatmal", "washim"];
+
+//         const taluka = ["Arni", "Darwha", "Digras", "Ghatanji", "Kalamb", "Kelapur", "Mahagaon", "Maregaon", "Ner", "Ralegaon", "Yavatmal"];
+//         const village = [
+//             "Aajani",
+//             "Aajanti",
+//             "Aashti",
+//             "Aasola",
+//             "Adani",
+//             "Adani Pod",
+//             "Amala Gav",
+//             "Amala Tanda",
+//             "Amshet",
+//             "Anji",
+//             "Anuppod",
+//             "Arambhi",
+//             "Athmurdi",
+//             "Banayat",
+//             "Bandar",
+//             "Baradgaon",
+//             "Bechkheda",
+//             "Belora",
+//             "Bhamb Raja",
+//             "Bhurkipod",
+//             "Bodgavhan",
+//             "Borgaon",
+//             "Bori Chandra",
+//             "Bori Gosavi",
+//             "Bori Sinha",
+//             "Borjai",
+//             "Bramhanpur",
+//             "Bramhanwada",
+//             "Bramhanwada Purv",
+//             "Bramhanwada Tanda",
+//             "Bramhi",
+//             "Chandapur",
+//             "Chani",
+//             "Chauki",
+//             "Chauki Zuli",
+//             "Chikani",
+//             "Chikhali",
+//             "Chinchala",
+//             "Chinchamandal",
+//             "Chopan",
+//             "Churkuta",
+//             "Dabha",
+//             "Daheli",
+//             "Dahifal",
+//             "Deurwadi",
+//             "Devala",
+//             "Devdharui",
+//             "Dhaipod",
+//             "Dhanaj",
+//             "Dharanpod",
+//             "Domaga",
+//             "Dongargaon",
+//             "Dudhgav",
+//             "Echora",
+//             "Fulwadi",
+//             "Gadegao",
+//             "Gajipur",
+//             "Garpod",
+//             "Gaulpend",
+//             "Gaurala",
+//             "Gavpod",
+//             "Ghubadheti",
+//             "Gondegaon",
+//             "Gondgavhan",
+//             "Gunj",
+//             "Haru",
+//             "Hatgaon",
+//             "Hivara",
+//             "Indrathana",
+//             "Jambhora",
+//             "Jamwadi",
+//             "Jankai",
+//             "Kamathwada",
+//             "Kanada",
+//             "Kanala",
+//             "Kanzara",
+//             "Kapshi",
+//             "Karamala",
+//             "Khairgaon",
+//             "Khairgaon Pod",
+//             "Khairgaon Tanda",
+//             "Khandani",
+//             "Khatara",
+//             "Kinhi Walashi",
+//             "Krushnapur",
+//             "Kumbhari",
+//             "Kumbhipod",
+//             "Ladkhed",
+//             "Lakhmapur",
+//             "Lohatwadi",
+//             "Loni",
+//             "Majara",
+//             "Malkhed Bu.",
+//             "Malkinho",
+//             "Mangla Devi",
+//             "Mangrul",
+//             "Manikwada",
+//             "Manjarda",
+//             "Mardi",
+//             "Maregaon",
+//             "Masola",
+//             "Mendhala",
+//             "Mendhani",
+//             "Morath",
+//             "Morgavhan",
+//             "Mozar",
+//             "Mukindpur",
+//             "Munjhala",
+//             "Murli",
+//             "Nababpur",
+//             "Nagai",
+//             "Nageshvar",
+//             "Nait",
+//             "Naka Pardi",
+//             "Narkund",
+//             "Narsapur",
+//             "Ner",
+//             "Pahapal",
+//             "Palaskund",
+//             "Pandharkawada",
+//             "Pandhurbna",
+//             "Pandhurna Budruk",
+//             "Pandhurna Khurd",
+//             "Pangari",
+//             "Pangari Tanda",
+//             "Paradhi Beda",
+//             "Pardhi Tanda",
+//             "Pathari",
+//             "Pathrad Gole",
+//             "Pendhara",
+//             "Pimpalgaon",
+//             "Pimpari Ijara",
+//             "Pisgaon",
+//             "Prathrad Devi",
+//             "Ramnagar Tanda",
+//             "Rui",
+//             "Sajegaon",
+//             "Salaipod",
+//             "Salod",
+//             "Sarangpur",
+//             "Sarkinhi",
+//             "Satefal",
+//             "Savangi",
+//             "Sawala",
+//             "Sawana",
+//             "Sawanga",
+//             "Sawargaon",
+//             "Sawargaon Kale",
+//             "Saykheda",
+//             "Sevadas Nagar",
+//             "Shakalgaon",
+//             "Shankarpur",
+//             "Shelodi",
+//             "Shindi",
+//             "Shirpurwadi",
+//             "Shivani",
+//             "Shivpod",
+//             "Singaldip",
+//             "Sonegaon",
+//             "Sonupod",
+//             "Sonurli",
+//             "Surdevi",
+//             "Takali",
+//             "Tembhi",
+//             "Thalegaon",
+//             "Tiwasa",
+//             "Uchegaon",
+//             "Udapur",
+//             "Ujona",
+//             "Umari",
+//             "Umartha",
+//             "Vasantnagar",
+//             "Veni",
+//             "Virgavhan",
+//             "Vyahali",
+//             "Wadgaon",
+//             "Wadgaon Gadhave",
+//             "Wadgaon Poste",
+//             "Wai",
+//             "Wakodi",
+//             "Walki",
+//             "Waradh",
+//             "Warjai",
+//             "Warud",
+//             "Watfal",
+//             "Yelguda",
+//             "Zombhadi",
+//         ];
+
+//         const clusterName = [
+//             "Masola",
+//             "Bori Chandra",
+//             "Bramhi",
+//             "Chaani (ka)",
+//             "Malkhed Bu.",
+//             "Pathrad Devi",
+//             "Arambhi",
+//             "Murali",
+//             "Umari",
+//             "Adani",
+//             "Veni",
+//             "Chinchala",
+//             "Khandani",
+//             "Mardi",
+//             "Ner",
+//             "Pathrad Gole",
+//             "Tembhi",
+//             "Palaskund",
+//             "Bori Sinha",
+//             "Rui",
+//         ];
+
+//         const typeOfLand = ["Clayey", "Sandy Loam", "Sandy"];
+
+//         const conservationMeasureItems = ["Trenching", "Farm Pond", "Bunding"];
+
+//         const microIrrigation = ["Drip", "Sprinklers"];
+
+//         const sourceIrrigationItems = ["Well", "Canal"];
+
+
+
+//         // Send parsed data and districts to frontend
+//         return res.status(200).json( {
+//             success: true,
+//             farmer: { ...farmer.toJSON(), cropsSown: parsedCropsSown },
+//             districts,
+//             taluka,
+//             village,
+//             clusterName,
+//             typeOfLand,
+//             conservationMeasureItems,
+//             microIrrigation,
+//             sourceIrrigationItems,
+
+//         });
+//     } catch (error) {
+//         console.error("Error fetching farmer details:", error);
+//         res.status(500).render('editfarmer', {
+//             success: false,
+//             message: "Internal server error",
+//             farmer: null,
+//         });
+//     }
+// };
+
 
 export const UserLogout = (req, res) => {
     try {
@@ -1019,16 +1270,14 @@ export const updateFarmerDetails = async (req, res) => {
     }
 };
 
-
-
 // Location APi's
 
 export const UserLocation = async (req, res) => {
 
     try {
-        const { userId, fullname, role, latitude, longitude } = req.body;
+        const { userId, fullname, role, latitude, longitude, address } = req.body;
 
-        if (!userId || !fullname || !role || !latitude || !longitude) {
+        if (!userId || !fullname || !role || !latitude || !longitude || !address) {
             return res.status(400).json({ success: false, message: "All fields are required." });
         }
         const newLocation = await Location.create({
@@ -1037,6 +1286,7 @@ export const UserLocation = async (req, res) => {
             role,
             latitude,
             longitude,
+            address
         });
 
         res.status(201).json({ success: true, message: "Location added successfully!", data: newLocation });
@@ -1062,7 +1312,7 @@ export const getlocationbyuserid = async (req, res) => {
     try {
         const { userId } = req.params;
 
-        const location = await Location.findOne({ where: { userId } });
+        const location = await Location.findAll({ where: { userId } });
 
         if (!location) {
             return res.status(404).json({ success: false, message: "Location not found for this userId." });

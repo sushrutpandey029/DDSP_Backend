@@ -5,7 +5,7 @@ import {
     UserRegister, userlist, farmerlist, AdminUpdateFarmer,
     UserLogin, adduser, DeleteUserById,
     getuserbyid, AdminupdateUser, details,
-    DeleteFarmerById, getfarmerbyid, changepassword, getAllFieldWorkerWorkDetails, UpdatePassword, getProductionAndCultivationById
+    DeleteFarmerById, getfarmerbyid, changepassword,getFarmersByCluster,editFieldWorkerWorkDetailsById,DeleteFieldOfficerWorkDetailById, getAllFieldWorkerWorkDetails, UpdatePassword, getProductionAndCultivationById
 } from '../Controllers/Admin_Controller.js';
 import {
     data, updateUser, addFieldWorkerWorkDetail, usergetAllFieldWorkerWorkDetails,
@@ -14,7 +14,7 @@ import {
     getFarmers, addCultivationCostDetails, addCultivationCostDetails1,
     getProductionDetails, UserLocation, getalllocation, getlocationbyuserid,locationdeletebyid, addProductionDetails, updateFarmerDetails, addCoordinatorWorkDetails, getFieldWorkerWorkDetailsById
 } from '../Controllers/ProjectManager_Controller.js';
-import { authenticateJWT } from '../Middlewares/JwtAuthAminLogin.js';
+import { authenticateJWT } from '../Middlewares/JwtAuthAminLogin.js'; 
 import { authorizeRole } from '../Middlewares/RoleBasedAuth.js'; // Import the new middleware
 import upload from '../Middlewares/ProfileUploaupLoad.js';
 import { isAuthenticated } from '../Middlewares/isAuthenticated.js'; // Adjust path if necessary
@@ -40,6 +40,16 @@ router.get('/edituser/:id', getuserbyid);
 router.post('/adminupdateuser/:id', upload.single('profileimage'), AdminupdateUser);
 router.get('/delete/:id', DeleteUserById);
 router.get('/getAllFieldWorkerWorkDetails', getAllFieldWorkerWorkDetails);
+router.get('/work_details/:id', editFieldWorkerWorkDetailsById);
+
+router.get('/deleteWorkDetail/:id', DeleteFieldOfficerWorkDetailById);
+
+// REPORT FUNCTION GERENATE
+router.get('/getFarmersByCluster', getFarmersByCluster);
+
+
+
+
 
 
 
@@ -69,8 +79,9 @@ router.get('/api/user/workdetails', usergetAllFieldWorkerWorkDetails);
 router.get('/api/user/workdetailsbyid/:id', getFieldWorkerWorkDetailsById);
 router.put('/api/user/updateworkdetailsbyid/:id', updateFieldWorkerWorkDetailsById);
 
-router.put('/api/user/updateFarmerDetails/:id', updateFarmerDetails);
 
+
+router.put('/api/user/updateFarmerDetails/:id', updateFarmerDetails);
 router.post('/api/user/adduserlocation', UserLocation);
 router.get('/api/user/getalllocation', getalllocation);
 router.get('/api/user/getlocationbyuserid/:userId', getlocationbyuserid);

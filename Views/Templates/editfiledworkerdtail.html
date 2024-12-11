@@ -1,0 +1,144 @@
+{{>header farmer=farmer farmersList=farmersList}}
+
+{{>verticalnav farmersList=farmersList}}
+
+<div class="hk-pg-wrapper">
+    <div class="container-xxl">
+        <header class="invoice-header">
+            <div class="d-flex align-items-center">
+                <h1>Field Worker Work Details</h1>
+                
+                {{#if success}}
+                <div class="alert alert-success" role="alert">{{message}}</div>
+                {{/if}}
+
+                {{#if error}}
+                <div class="alert alert-danger" role="alert">{{message}}</div>
+                {{/if}}
+            </div>
+        </header>
+
+        <form id="farmerUpdateForm">
+            <!-- Displaying the fetched work details -->
+            <div class="mb-3">
+                <label for="name" class="form-label">Field Worker Name</label>
+                <input type="text" class="form-control" id="name" value="{{data.name}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="address" class="form-label">Address</label>
+                <input type="text" class="form-control" id="address" value="{{data.address}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="qualifications" class="form-label">Qualifications</label>
+                <input type="text" class="form-control" id="qualifications" value="{{data.qualifications}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="mobileNumber" class="form-label">Mobile Number</label>
+                <input type="tel" class="form-control" id="mobileNumber" value="{{data.mobileNumber}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="emailID" class="form-label">Email ID</label>
+                <input type="email" class="form-control" id="emailID" value="{{data.emailID}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="workDate" class="form-label">Work Date</label>
+                <input type="date" class="form-control" id="workDate" value="{{data.workDate}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="villagesVisited" class="form-label">Villages Visited</label>
+                <input type="text" class="form-control" id="villagesVisited" value="{{data.villagesVisited}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="travelInKms" class="form-label">Travel (in Kms)</label>
+                <input type="number" class="form-control" id="travelInKms" value="{{data.travelInKms}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="farmersContactedIndividually" class="form-label">Farmers Contacted Individually</label>
+                <input type="number" class="form-control" id="farmersContactedIndividually" value="{{data.farmersContactedIndividually}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="groupMeetingsConducted" class="form-label">Group Meetings Conducted</label>
+                <input type="number" class="form-control" id="groupMeetingsConducted" value="{{data.groupMeetingsConducted}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="farmersContactedInGroupMeetings" class="form-label">Farmers Contacted in Group Meetings</label>
+                <input type="number" class="form-control" id="farmersContactedInGroupMeetings" value="{{data.farmersContactedInGroupMeetings}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="clusterTrainingPlace" class="form-label">Cluster Training Place</label>
+                <input type="text" class="form-control" id="clusterTrainingPlace" value="{{data.clusterTrainingPlace}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="farmersAttendedTraining" class="form-label">Farmers Attended Training</label>
+                <input type="number" class="form-control" id="farmersAttendedTraining" value="{{data.farmersAttendedTraining}}" readonly>
+            </div>
+
+            <!-- Editable Input Supplied Section with Dynamic Add Button -->
+            <div class="mb-3">
+                <label for="inputSupplied" class="form-label">Input Supplied</label>
+                <div id="inputSuppliedList">
+                    {{#each data.inputSupplied}}
+                    <div class="input-supplied-item">
+                        <label for="input{{@index}}">{{name}} - {{quantity}}</label>
+                        <input type="text" class="form-control mb-2" id="input{{@index}}" value="{{quantity}}" name="inputSupplied[{{@index}}][quantity]" required>
+                    </div>
+                    {{/each}}
+                </div>
+                <button type="button" id="addInputButton" class="btn btn-success">Add New Input</button>
+            </div>
+
+            <!-- Consultancy Section -->
+            <div class="mb-3">
+                <label for="consultancyTelephone" class="form-label">Consultancy via Telephone</label>
+                <input type="number" class="form-control" id="consultancyTelephone" value="{{data.consultancyTelephone}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="consultancyWhatsApp" class="form-label">Consultancy via WhatsApp</label>
+                <input type="number" class="form-control" id="consultancyWhatsApp" value="{{data.consultancyWhatsApp}}" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="totalConsultancy" class="form-label">Total Consultancy</label>
+                <input type="number" class="form-control" id="totalConsultancy" value="{{data.totalConsultancy}}" readonly>
+            </div>
+
+            <!-- Update Button -->
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary" id="updateButton">Update</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{{>footer}}
+
+<script>
+    // Function to dynamically add a new input item
+    document.getElementById('addInputButton').addEventListener('click', function() {
+        const inputSuppliedList = document.getElementById('inputSuppliedList');
+        const newInputItem = document.createElement('div');
+        newInputItem.classList.add('input-supplied-item');
+
+        newInputItem.innerHTML = `
+            <label for="inputNew">New Input Name</label>
+            <input type="text" class="form-control mb-2" id="inputNew" name="inputSupplied[][name]" placeholder="Enter input name" required>
+            <label for="inputQuantityNew">Quantity</label>
+            <input type="text" class="form-control mb-2" id="inputQuantityNew" name="inputSupplied[][quantity]" placeholder="Enter quantity" required>
+        `;
+        inputSuppliedList.appendChild(newInputItem);
+    });
+</script>

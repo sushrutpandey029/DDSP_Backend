@@ -33,6 +33,10 @@ hbs.registerHelper('gt', function (value1, value2) {
     return value1 > value2;
 });
 
+Handlebars.registerHelper('json', function(context) {
+  return JSON.stringify(context, null, 2);
+});
+
 // Register the 'isObject' helper for Handlebars to check if a value is an object
 hbs.registerHelper('isObject', function(value) {
   return typeof value === 'object' && value !== null;
@@ -81,7 +85,7 @@ app.set('views', path.join(__dirname, 'src', 'views'));
 app.set('views', path.join(__dirname, 'Views', 'Templates'));
 hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'));
 // app.use(express.static(path.join(__dirname, 'src', 'assets')))
-; 
+
 app.use(express.static(path.join(__dirname, 'Views', 'src', 'assets')));
 app.use('/profile-images', express.static(path.join(__dirname, 'Views', 'src', 'ProfileImage')));
 
