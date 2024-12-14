@@ -13,24 +13,23 @@ const CoordinatorWorkDetail = sequelize.define('CoordinatorWorkDetail', {
     },
     trainingProgrammes: {
         type: DataTypes.JSON,
-        allowNull: false,
-        defaultValue: {},
+        allowNull: true,
     },
     reviewMeetings: {
         type: DataTypes.JSON,
         allowNull: true,
-        defaultValue: {},
     },
     monitoringVisits: {
         type: DataTypes.JSON,
         allowNull: true,
-        defaultValue: {},
     },
     reports: {
         type: DataTypes.JSON,
         allowNull: true,
-        defaultValue: {},
     },
+}, {
+    tableName: 'CoordinatorWorkDetail', // Table name for the model
+    timestamps: true, // Automatically handle createdAt and updatedAt fields
 });
 
 export default CoordinatorWorkDetail;

@@ -9,6 +9,14 @@ import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import Op from 'sequelize';
 import sequelize from 'sequelize';
+
+import XLSX from 'xlsx';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// Fix for __dirname in ES6 modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // import sequelize from '../DB_Connection/MySql_Connect.js'
 
 
@@ -16,6 +24,7 @@ export const Adminlogin = async (req, res) => {
     res.render('index');
 
 };
+
 
 export const AdminRegister = async (req, res) => {
     try {
@@ -635,7 +644,6 @@ export const AdminDashboard = async (req, res) => {
         return res.redirect('/');
     }
 };
-
 // Function to get monthly farmer data
 const getMonthlyFarmerData = async (village, year) => {
     const data = await farmers.findAll({
@@ -712,7 +720,7 @@ export const UpdatePassword = async (req, res) => {
         res.redirect(`/changepassword/${userId}`);
     }
 };
-// user api
+
 export const adduser = async (req, res) => {
     res.render('adduser');
 
@@ -792,6 +800,56 @@ export const userlist = async (req, res) => {
     }
 };
 
+
+export const fieldofficerlist = async (req, res) => {
+    try {
+        const fieldOfficers = await UserModel.findAll({
+            where: { role: 'Field Officer' },
+        });
+
+        if (fieldOfficers.length === 0) {
+            return res.render('fieldofficerlist', { message: 'No Field Officers found' });
+        }
+        res.render('userlist', { users: fieldOfficers });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+export const PClist = async (req, res) => {
+    try {
+        const ProcjectCoardinater = await UserModel.findAll({
+            where: { role: 'Project Coordinator' },
+        });
+
+        if (ProcjectCoardinater.length === 0) {
+            return res.render('PClist', { message: 'No Procject Coardinater found' });
+        }
+        res.render('PClist', { users: ProcjectCoardinater });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+export const AsstPClist = async (req, res) => {
+    try {
+        const AsstProcjectCoardinater = await UserModel.findAll({
+            where: { role: 'Assistant Project Coordinator' },
+        });
+
+        if (AsstProcjectCoardinater.length === 0) {
+            return res.render('AsstPClist', { message: 'No Assistant Procject Coardinater found' });
+        }
+        res.render('AsstPClist', { users: AsstProcjectCoardinater });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+
 export const farmerlist = async (req, res) => {
     try {
         const farmer = await farmers.findAll();
@@ -808,6 +866,37 @@ export const farmerlist = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
+// export const farmerlistbyuserid = async (req, res) => {
+//     try {
+//         const { userid } = req.params;
+
+//         // Check if user_id is provided
+//         if (!userid) {
+//             return res.status(400).json({ message: "User ID is required" });
+//         }
+
+//         // Fetch farmers by user_id
+//         const Allfarmers = await farmers.findAll({
+//             where: { userid },
+//         });
+
+//         // If no farmers are found
+//         if (Allfarmers.length === 0) {
+//             return res.render('farmerlist', { message: 'No farmers found for this user' });
+//         }
+
+//         res.status(200).json({
+//             message:"All farmer related user",
+//             data:Allfarmers
+//         })
+//         // res.render('farmerlist', { farmers });
+//     } catch (error) {
+//         console.error("Error fetching farmers by user ID:", error);
+//         res.status(500).json({ success: false, message: "Internal server error" });
+//     }
+// };
+
 
 export const DeleteFarmerById = async (req, res) => {
     try {
@@ -1226,8 +1315,6 @@ export const editFieldWorkerWorkDetailsById = async (req, res) => {
 };
 
 
-
-
 export const getfarmerbyid = async (req, res) => {
     try {
         const { id } = req.params;
@@ -1603,32 +1690,48 @@ export const AdminUpdateFarmer = async (req, res) => {
 
 // export const getFarmersByCluster = async (req, res) => {
 //     try {
-//         const { clusterName } = req.params;
+//         const clusterNames = [
+//             "Masola", "Bori Chandra", "Bramhi", "Chaani (ka)", "Malkhed Bu.",
+//             "Pathrad Devi", "Arambhi", "Murali", "Umari", "Adani", "Veni",
+//             "Chinchala", "Khandani", "Mardi", "Ner", "Pathrad Gole",
+//             "Tembhi", "Palaskund", "Bori Sinha", "Rui"
+//         ];
+
+//         const clusterName = req.query.clusterName; // Retrieve clusterName from query parameters
 
 //         if (!clusterName) {
-//             return res.status(400).json({ success: false, message: "Cluster name is required." });
+//             return res.render('clusterfarmer', {
+//                 success: false,
+//                 message: "Please select a cluster name.",
+//                 totalFarmers: 0,
+//                 data: [],
+//                 clusters: clusterNames, // Pass cluster names for the dropdown
+//             });
 //         }
 
-//         const farmer = await farmers.findAll({
+//         // Fetch farmers based on the selected cluster
+//         const farmersData = await farmers.findAll({
 //             where: { clusterName },
 //         });
 
-//         if (farmer.length === 0) {
-//             return res.render('clusterbyfarmer', {
+//         if (farmersData.length === 0) {
+//             return res.render('clusterfarmer', {
 //                 success: false,
 //                 message: `No farmers found in cluster '${clusterName}'.`,
 //                 totalFarmers: 0,
 //                 data: [],
+//                 clusters: clusterNames, // Pass cluster names for the dropdown
 //             });
 //         }
 
-//         const totalFarmers = farmer.length;
+//         const totalFarmers = farmersData.length;
 
-//         res.render('clusterbyfarmer', {
+//         res.render('clusterfarmer', {
 //             success: true,
 //             message: `Farmers in cluster '${clusterName}' retrieved successfully.`,
 //             totalFarmers,
-//             data: farmer,
+//             data: farmersData,
+//             clusters: clusterNames, // Pass cluster names for the dropdown
 //         });
 //     } catch (error) {
 //         console.error("Error fetching farmers by cluster:", error);
@@ -1639,37 +1742,29 @@ export const AdminUpdateFarmer = async (req, res) => {
 
 export const getFarmersByCluster = async (req, res) => {
     try {
-        const { clusterName } = req.query; // Retrieve clusterName from query parameters
+        const clusterNames = [
+            "Masola", "Bori Chandra", "Bramhi", "Chaani (ka)", "Malkhed Bu.",
+            "Pathrad Devi", "Arambhi", "Murali", "Umari", "Adani", "Veni",
+            "Chinchala", "Khandani", "Mardi", "Ner", "Pathrad Gole",
+            "Tembhi", "Palaskund", "Bori Sinha", "Rui"
+        ];
+        const defaultClusterName = "Bori Chandra";
+        const clusterName = req.query.clusterName || defaultClusterName; 
 
-        if (!clusterName) {
-            return res.render('clusterbyfarmer', {
-                success: false,
-                message: "Please select a cluster name.",
-                totalFarmers: 0,
-                data: [],
-            });
-        }
-
+        
         const farmersData = await farmers.findAll({
             where: { clusterName },
         });
-
-        if (farmersData.length === 0) {
-            return res.render('custerbyfarmer', {
-                success: false,
-                message: `No farmers found in cluster '${clusterName}'.`,
-                totalFarmers: 0,
-                data: [],
-            });
-        }
-
         const totalFarmers = farmersData.length;
-
-        res.render('custerbyfarmer', {
-            success: true,
-            message: `Farmers in cluster '${clusterName}' retrieved successfully.`,
+        res.render('clusterfarmer', {
+            success: farmersData.length > 0,
+            message: farmersData.length
+                ? `Farmers in cluster '${clusterName}' retrieved successfully.`
+                : `No farmers found in cluster '${clusterName}'.`,
             totalFarmers,
             data: farmersData,
+            clusters: clusterNames,
+            clusterName, 
         });
     } catch (error) {
         console.error("Error fetching farmers by cluster:", error);
@@ -1677,22 +1772,105 @@ export const getFarmersByCluster = async (req, res) => {
     }
 };
 
+// export const downloadFarmersByCluster = async (req, res) => {
+//     try {
+//         const clusterName = req.query.clusterName || "Bori Chandra";
+//         const farmersData = await farmers.findAll({
+//             where: { clusterName },
+//         });
 
+//         if (farmersData.length === 0) {
+//             return res.status(404).json({ success: false, message: `No farmers found in cluster '${clusterName}'.` });
+//         }
+//         const excelData = farmersData.map(farmer => ({
+//             ID: farmer.id,
+//             UserID: farmer.userid,
+//             UserRole: farmer.userrole,
+//             FarmerID: farmer.farmerID,
+//             Name: farmer.name,
+//             VillageName: farmer.villageName,
+//             Taluka: farmer.taluka,
+//             ClusterName: farmer.clusterName,
+//             TotalLand: farmer.cultivatedLand,
+//             TypeOfLand: farmer.typeOfLand,
+//         }));
 
+//         const workbook = XLSX.utils.book_new();
+//         const worksheet = XLSX.utils.json_to_sheet(excelData);
+//         XLSX.utils.book_append_sheet(workbook, worksheet, 'Farmers');
 
+//         const fileName = `Farmers_${clusterName}.xlsx`;
+//         const filePath = path.join(__dirname, fileName);
 
+//         XLSX.writeFile(workbook, filePath);
+//         res.download(filePath, fileName, (err) => {
+//             if (err) console.error("Error sending file:", err);
+//             fs.unlinkSync(filePath);
+//         });
+//     } catch (error) {
+//         console.error("Error downloading farmers by cluster:", error);
+//         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+//     }
+// };
 
+export const downloadFarmersByCluster = async (req, res) => {
+    try {
+        const clusterName = req.query.clusterName || "Bori Chandra";
 
+        // Fetch farmers based on the selected cluster
+        const farmersData = await farmers.findAll({
+            where: { clusterName },
+        });
 
+        if (farmersData.length === 0) {
+            return res.status(404).json({ success: false, message: `No farmers found in cluster '${clusterName}'.` });
+        }
 
+        // Prepare Excel data
+        const excelData = farmersData.map(farmer => ({
+            FarmerID: farmer.farmerID,
+            Name: farmer.name,
+            MobileNumber: farmer.mobileNumber,
+            EmailID: farmer.emailID,
+            VillageName: farmer.villageName,
+            Taluka: farmer.taluka,
+            ClusterName: farmer.clusterName,
+            District: farmer.district,
+            CultivatedLand: farmer.cultivatedLand,
+            TypeOfLand: farmer.typeOfLand,
+            DesiBreeds: farmer.desiBreeds,
+            IrrigationSource: farmer.irrigationSource,
+            SoilConservationMeasures: farmer.soilConservationMeasures,
+            MicroIrrigation: farmer.microIrrigation,
+            Rabi_Natural_Irrigated_Crops: farmer.cropsSown?.rabi?.natural_irrigated.map(crop => crop.crop).join(", ") || "None",
+            Rabi_Chemical_Irrigated_Crops: farmer.cropsSown?.rabi?.chemical_irrigated.map(crop => crop.crop).join(", ") || "None",
+            Kharif_Natural_Irrigated_Crops: farmer.cropsSown?.kharif?.natural_irrigated.map(crop => crop.crop).join(", ") || "None",
+            Kharif_Chemical_Irrigated_Crops: farmer.cropsSown?.kharif?.chemical_irrigated.map(crop => crop.crop).join(", ") || "None",
+            CreatedAt: farmer.createdAt,
+            UpdatedAt: farmer.updatedAt,
+        }));
 
+        // Create Excel file
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Farmers');
 
+        const fileName = `Farmers_${clusterName}.xlsx`;
+        const filePath = path.join(__dirname, fileName);
 
+        XLSX.writeFile(workbook, filePath);
 
-
-
-
-
+        // Send the file to the client
+        res.download(filePath, fileName, (err) => {
+            if (err) console.error("Error sending file:", err);
+            // Delete the file after sending
+            fs.unlinkSync(filePath);
+        });
+    } catch (error) {
+        console.error("Error downloading farmers by cluster:", error);
+        res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+};
 
 
 

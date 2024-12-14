@@ -2,9 +2,9 @@ import express from 'express';
 import {
     AdminRegister, AdminLogin, AdminLogout,
     Adminlogin, AdminDashboard,
-    UserRegister, userlist, farmerlist, AdminUpdateFarmer,
+    UserRegister, userlist,fieldofficerlist, farmerlist, AdminUpdateFarmer,
     UserLogin, adduser, DeleteUserById,
-    getuserbyid, AdminupdateUser, details,
+    getuserbyid, AdminupdateUser, details,PClist,AsstPClist,downloadFarmersByCluster,
     DeleteFarmerById, getfarmerbyid, changepassword,getFarmersByCluster,editFieldWorkerWorkDetailsById,DeleteFieldOfficerWorkDetailById, getAllFieldWorkerWorkDetails, UpdatePassword, getProductionAndCultivationById
 } from '../Controllers/Admin_Controller.js';
 import {
@@ -12,7 +12,7 @@ import {
     FOdeleteFarmerById, getProductionAndCultivationByFarmerID,
     getFarmerById, UserLogout, UserUpdatePassword, addFarmerInfo, updateFieldWorkerWorkDetailsById,
     getFarmers, addCultivationCostDetails, addCultivationCostDetails1,
-    getProductionDetails, UserLocation, getalllocation, getlocationbyuserid,locationdeletebyid, addProductionDetails, updateFarmerDetails, addCoordinatorWorkDetails, getFieldWorkerWorkDetailsById
+    getProductionDetails, UserLocation, getalllocation,addInteraction,farmerlistbyuserid, getlocationbyuserid,locationdeletebyid, addProductionDetails, updateFarmerDetails, addCoordinatorWorkDetails, getFieldWorkerWorkDetailsById
 } from '../Controllers/ProjectManager_Controller.js';
 import { authenticateJWT } from '../Middlewares/JwtAuthAminLogin.js'; 
 import { authorizeRole } from '../Middlewares/RoleBasedAuth.js'; // Import the new middleware
@@ -24,6 +24,12 @@ export const router = express.Router();
 router.post('/api/admin/adminregister', AdminRegister);
 router.get('/', Adminlogin);
 router.post('/adminlogin', AdminLogin);
+
+
+router.get('/fieldOfficerlist', fieldofficerlist);
+router.get('/Project_Coordinator', PClist);
+router.get('/Asst_Project_Coordinator', AsstPClist);
+
 router.get('/dashboard', isAuthenticated, AdminDashboard);
 router.get('/adminlogout', AdminLogout);
 router.get('/changepassword/:id', changepassword);
@@ -42,25 +48,24 @@ router.get('/delete/:id', DeleteUserById);
 router.get('/getAllFieldWorkerWorkDetails', getAllFieldWorkerWorkDetails);
 router.get('/work_details/:id', editFieldWorkerWorkDetailsById);
 
+
 router.get('/deleteWorkDetail/:id', DeleteFieldOfficerWorkDetailById);
 
 // REPORT FUNCTION GERENATE
-router.get('/getFarmersByCluster', getFarmersByCluster);
-
-
-
-
-
-
-
-
-
-
+router.get('/getfarmerbyclusetr', getFarmersByCluster);
+router.get('/downloadxcel', downloadFarmersByCluster);
 
 
 
 router.post('/api/admin/userregister', upload.single('profileimage'), UserRegister);
 router.put('/api/admin/userupdate/:id', upload.single('profileimage'), updateUser);
+
+
+
+
+
+
+
 router.post('/api/user/userlogin', UserLogin);
 router.post('/api/user/addfarmerinfo', addFarmerInfo);
 router.get('/api/user/getFarmers', getFarmers);
@@ -86,6 +91,11 @@ router.post('/api/user/adduserlocation', UserLocation);
 router.get('/api/user/getalllocation', getalllocation);
 router.get('/api/user/getlocationbyuserid/:userId', getlocationbyuserid);
 router.delete('/api/user/locationdeletebyid/:id', locationdeletebyid);
+
+router.post('/api/user/addInteraction', addInteraction);
+
+router.get('/api/user/farmerlistbyuserid/:userid', farmerlistbyuserid);
+
 
 
 

@@ -74,6 +74,7 @@ app.use(cors());
 
 
 const __filename = fileURLToPath(import.meta.url);
+
 const __dirname = path.dirname(__filename);
 
 
@@ -87,21 +88,22 @@ hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'
 // app.use(express.static(path.join(__dirname, 'src', 'assets')))
 
 app.use(express.static(path.join(__dirname, 'Views', 'src', 'assets')));
+
 app.use('/profile-images', express.static(path.join(__dirname, 'Views', 'src', 'ProfileImage')));
 
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-const Port = process.env.NODE_ENV === 'development' ? process.env.PORT || 2020 : 2024;
+const Port = process.env.PORT || 2024;
 
 // Configure MySQL session store
 const sessionStore = new MySQLStore({
-  host: '68.178.173.163', // Your MySQL host
+  host: '127.0.0.1', // Your MySQL host
   port: 3306, // Your MySQL port
-  user: '@$e$4~bzK5SS', // Your MySQL username
-  password: 'milleniancecom_ddspapp', // Your MySQL password
-  database: 'milleniancecom_ddsp_app', // Your database name
+  user: 'root', // Your MySQL username
+  password: 'root@123', // Your MySQL password
+  database: 'ddsp', // Your database name
 });
 
 
@@ -138,7 +140,7 @@ app.use('/', router);
 // Function to start the server
 const startServer = () => {
   sequelize.sync().then(() => {
-
+    
     app.listen(Port, () => {
       console.log(`Server running on port: http://localhost:${Port}`);
     });

@@ -1,15 +1,20 @@
 import { DataTypes } from 'sequelize';
 import sequelize from "../DB_Connection/MySql_Connect.js"; 
 
-const CultivationCost = sequelize.define('CultivationCosts', {
+const CultivationCost = sequelize.define('CultivationCost', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
     farmerID: {
         type: DataTypes.STRING, // Matching the farmerID type from FarmerInfo
         allowNull: false,
     },
-    cropName: {
-        type: DataTypes.JSON, // Use JSON for MySQL
+    crops: {
+        type: DataTypes.JSON,
         allowNull: false,
-        defaultValue: {}, // Default to an empty object
+        defaultValue: {}  // Default to an empty object if no data is provided
     },
     totalCost: {
         type: DataTypes.FLOAT,

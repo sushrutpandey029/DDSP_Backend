@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../DB_Connection/MySql_Connect.js";
 
-const Location = sequelize.define('user_locations', {
+const Location = sequelize.define('user_location', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -43,6 +43,9 @@ const Location = sequelize.define('user_locations', {
         type: DataTypes.DATE,
         defaultValue: sequelize.NOW,
     },
+}, {
+    tableName: 'user_location',
+    timestamps: true,
 });
 
 export default Location;

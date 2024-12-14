@@ -6,6 +6,12 @@ import workedetails from '../Models/PrpjectCoordinatorWorkDetailModel.js'
 import FieldWorkerWorkDetail from '../Models/FOWorkDetailModel.js'
 import Location from '../Models/UserLocationModel.js';
 import bcrypt from "bcrypt";
+import Interaction from '../Models/InteractionModel.js';
+
+
+
+
+
 import jwt from 'jsonwebtoken';
 
 export const data = async (req, res) => {
@@ -82,12 +88,12 @@ const generateFarmerID = () => {
 export const addFarmerInfo = async (req, res) => {
     try {
         const {
-            name, mobileNumber, emailID, villageName, taluka, cluster, district,
+            userid,userrole,name, mobileNumber, emailID, villageName, taluka, cluster, district,
             cultivatedLand, typeOfLand, cropsSown, desiBreeds, irrigationSource,
             soilConservationMeasures, microIrrigation
         } = req.body;
 
-        if (!name || !mobileNumber || !emailID || !villageName || !taluka || !cluster || !district || !cultivatedLand || !typeOfLand || !cropsSown || !desiBreeds || !irrigationSource || !soilConservationMeasures || !microIrrigation) {
+        if (!userid || !userrole || !name || !mobileNumber || !emailID || !villageName || !taluka || !cluster || !district || !cultivatedLand || !typeOfLand || !cropsSown || !desiBreeds || !irrigationSource || !soilConservationMeasures || !microIrrigation) {
             res.status(400).json({
                 message: "All fields are required",
             })
@@ -96,6 +102,8 @@ export const addFarmerInfo = async (req, res) => {
         const farmerID = await generateFarmerID();
         // const clusterName = `${villageName}_${taluka}`;
         const farmer = await Farmer.create({
+            userid,
+            userrole,
             farmerID,
             name,
             mobileNumber,
@@ -1170,107 +1178,171 @@ export const updateFieldWorkerWorkDetailsById = async (req, res) => {
     }
 };
 
+// export const updateFarmerDetails = async (req, res) => {
+//     try {
+//         const id = req.params.id;
+//         const {
+//             farmerID,
+//             newname,
+//             mobileNumber,
+//             emailID,
+//             villagename,
+//             taluka,
+//             clusterName,
+//             district,
+//             cultivatedLand,
+//             desiBreeds,
+//             typeOfLand,
+//             sourceIrrigationItems,
+//             conservationMeasureItems,
+//             microIrrigation,
+//             ...flattenedCropsSown
+//         } = req.body;
+
+//         console.log("Request body data:", req.body);
+
+//         const cropsSown = {};
+//         Object.keys(flattenedCropsSown).forEach((key) => {
+//             if (key.startsWith("cropsSown.")) {
+//                 const path = key.replace("cropsSown.", "").split(".");
+//                 let current = cropsSown;
+
+//                 path.forEach((segment, index) => {
+//                     if (index === path.length - 1) {
+//                         if (!current[segment]) current[segment] = [];
+//                         const [crop, cropLand] = flattenedCropsSown[key];
+//                         current[segment].push({ crop, cropLand });
+//                     } else {
+//                         current[segment] = current[segment] || {};
+//                         current = current[segment];
+//                     }
+//                 });
+//             }
+//         });
+
+//         console.log("Transformed cropsSown data:", cropsSown);
+
+//         // Find the farmer record by ID
+//         const farmer = await Farmer.findByPk(id);
+//         if (!farmer) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Farmer not found",
+//             });
+//         }
+
+//         // Update fields
+//         farmer.farmerID = farmerID;
+//         farmer.name = newname;
+//         farmer.mobileNumber = mobileNumber;
+//         farmer.emailID = emailID;
+//         farmer.villageName = villagename;
+//         farmer.taluka = taluka;
+//         farmer.clusterName = clusterName;
+//         farmer.district = district;
+//         farmer.cultivatedLand = cultivatedLand;
+//         farmer.desiBreeds = desiBreeds;
+//         farmer.typeOfLand = typeOfLand;
+//         farmer.sourceIrrigationItems = sourceIrrigationItems;
+//         farmer.conservationMeasureItems = conservationMeasureItems;
+//         farmer.microIrrigation = microIrrigation;
+
+//         if (Object.keys(cropsSown).length > 0) {
+       
+//                 farmer.cropsSown = JSON.stringify(cropsSown);
+//         }
+
+//         console.log("Updated farmer data:", farmer);
+
+//         const new_data = await farmer.save();
+
+//         console.log("new data", new_data)
+
+//         return res.status(200).json({
+//             success: true,
+//             message: "Farmer details updated successfully",
+//             data: new_data,
+//         });
+//     } catch (error) {
+//         console.error('Error updating farmer:', error.message);
+//         return res.status(500).json({
+//             success: false,
+//             message: "An error occurred while updating farmer details",
+//             error: error.message,
+//         });
+//     }
+// };
+
+// Location APi's
+
+
+
+
+
+
 export const updateFarmerDetails = async (req, res) => {
     try {
-        const id = req.params.id;
+        const id = req.params.id; // Get farmerID from URL parameters
         const {
             farmerID,
             newname,
             mobileNumber,
             emailID,
-            villagename,
+            villageName,
             taluka,
-            clusterName,
+            cluster,
             district,
             cultivatedLand,
-            desiBreeds,
             typeOfLand,
-            sourceIrrigationItems,
-            conservationMeasureItems,
-            microIrrigation,
-            ...flattenedCropsSown
+            cropsSown,
+            desiBreeds,
+            irrigationSource,
+            soilConservationMeasures,
+            microIrrigation
         } = req.body;
 
         console.log("Request body data:", req.body);
 
-        const cropsSown = {};
-        Object.keys(flattenedCropsSown).forEach((key) => {
-            if (key.startsWith("cropsSown.")) {
-                const path = key.replace("cropsSown.", "").split(".");
-                let current = cropsSown;
+        if (!id) {
+            return res.status(400).json({ message: "Farmer ID is required" });
+        }
 
-                path.forEach((segment, index) => {
-                    if (index === path.length - 1) {
-                        if (!current[segment]) current[segment] = [];
-                        const [crop, cropLand] = flattenedCropsSown[key];
-                        current[segment].push({ crop, cropLand });
-                    } else {
-                        current[segment] = current[segment] || {};
-                        current = current[segment];
-                    }
-                });
-            }
-        });
-
-        console.log("Transformed cropsSown data:", cropsSown);
-
-        // Find the farmer record by ID
+        // Check if the farmer exists
         const farmer = await Farmer.findByPk(id);
         if (!farmer) {
-            return res.status(404).json({
-                success: false,
-                message: "Farmer not found",
-            });
+            return res.status(404).json({ message: "Farmer not found" });
         }
 
-        // Update fields
-        farmer.farmerID = farmerID;
-        farmer.name = newname;
-        farmer.mobileNumber = mobileNumber;
-        farmer.emailID = emailID;
-        farmer.villageName = villagename;
-        farmer.taluka = taluka;
-        farmer.clusterName = clusterName;
-        farmer.district = district;
-        farmer.cultivatedLand = cultivatedLand;
-        farmer.desiBreeds = desiBreeds;
-        farmer.typeOfLand = typeOfLand;
-        farmer.sourceIrrigationItems = sourceIrrigationItems;
-        farmer.conservationMeasureItems = conservationMeasureItems;
-        farmer.microIrrigation = microIrrigation;
+        // Update the farmer's information
+        const updatedFarmer = await farmer.update({
+            farmerID:farmerID || farmer.farmerID,
+            name: newname || farmer.newname,
+            mobileNumber: mobileNumber || farmer.mobileNumber,
+            emailID: emailID || farmer.emailID,
+            villageName: villageName || farmer.villageName,
+            taluka: taluka || farmer.taluka,
+            clusterName: cluster || farmer.clusterName,
+            district: district || farmer.district,
+            cultivatedLand: cultivatedLand || farmer.cultivatedLand,
+            typeOfLand: typeOfLand || farmer.typeOfLand,
+            cropsSown: cropsSown || farmer.cropsSown,
+            desiBreeds: desiBreeds || farmer.desiBreeds,
+            irrigationSource: irrigationSource || farmer.irrigationSource,
+            soilConservationMeasures: soilConservationMeasures || farmer.soilConservationMeasures,
+            microIrrigation: microIrrigation || farmer.microIrrigation,
+        });
 
-        if (Object.keys(cropsSown).length > 0) {
-            try {
-                farmer.cropsSown = cropsSown;
-            } catch (err) {
-                console.error('Failed to stringify cropsSown:', err.message);
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid cropsSown format",
-                });
-            }
-        }
-
-        console.log("Updated farmer data:", farmer);
-
-        await farmer.save();
+        console.log("updated data in database", updatedFarmer);
 
         return res.status(200).json({
-            success: true,
-            message: "Farmer details updated successfully",
-            data: farmer,
+            message: "Farmer information updated successfully",
+            updatedFarmer,
         });
     } catch (error) {
-        console.error('Error updating farmer:', error.message);
-        return res.status(500).json({
-            success: false,
-            message: "An error occurred while updating farmer details",
-            error: error.message,
-        });
+        console.error(error);
+        return res.status(500).json({ message: "Error updating farmer information" });
     }
 };
-
-// Location APi's
 
 export const UserLocation = async (req, res) => {
 
@@ -1346,6 +1418,66 @@ export const locationdeletebyid = async (req, res) => {
 };
 
 
+// intaraction with farmer
+
+export const addInteraction = async (req, res) => {
+    try {
+        const { user_id, userrole, village, farmer, date, observationInBrief } = req.body;
+
+        if (!user_id || !userrole || !village || !date || !farmer || !observationInBrief) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        const newInteraction = await Interaction.create({
+            user_id,
+            userrole,
+            village,
+            farmer,
+            date,
+            observationInBrief,
+        });
+
+        return res.status(200).json({
+            success:true,
+            message: "Interaction added successfully",
+            data: newInteraction,
+        });
+
+    } catch (error) {
+        console.error("Error adding interaction:", error);
+        return res.status(500).json({ message: "Error adding interaction" });
+    }
+};
+
+
+
+export const farmerlistbyuserid = async (req, res) => {
+    try {
+        const { userid } = req.params;
+
+        if (!userid) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        const Allfarmers = await Farmer.findAll({
+            where: { userid },
+        });
+
+        if (Allfarmers.length === 0) {
+            return res.render('farmerlist', { message: 'No farmers found for this user' });
+        }
+
+        res.status(200).json({
+            success:true,
+            message:"All farmer related user",
+            data:Allfarmers
+        })
+        
+    } catch (error) {
+        console.error("Error fetching farmers by user ID:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
 
 
 

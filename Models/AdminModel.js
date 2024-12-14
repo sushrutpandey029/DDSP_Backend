@@ -20,6 +20,9 @@ const admin = sequelize.define('admin',{
         allowNull: true,
         defaultValue: 'accesstoken',
     }
+},{
+    tableName: 'admins',
+    timestamps: true,
 })
 
 export default admin;

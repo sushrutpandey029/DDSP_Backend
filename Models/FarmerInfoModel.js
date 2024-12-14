@@ -2,6 +2,19 @@ import { DataTypes } from 'sequelize';
 import sequelize from "../DB_Connection/MySql_Connect.js"; // Update with your database configuration
 
 const FarmerInfo = sequelize.define('FarmerInformations', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  userid:{
+    type: DataTypes.INTEGER,
+    allowNull:false
+  },
+  userrole:{
+    type: DataTypes.STRING,
+    allowNull:false
+  },
   farmerID: {
     type: DataTypes.CHAR(36),
     unique: true,
@@ -47,9 +60,7 @@ const FarmerInfo = sequelize.define('FarmerInformations', {
     allowNull: false,
   },
   cropsSown: {
-    type: DataTypes.JSON,
-    allowNull: false,
-    defaultValue: {}, // Ensure this is correct for your data
+    type: DataTypes.JSON, // Ensure this is correct for your data
   },
   desiBreeds: {
     type: DataTypes.INTEGER,  // Ensure this matches your input type
