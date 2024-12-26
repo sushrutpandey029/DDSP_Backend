@@ -4,15 +4,15 @@ import {
     Adminlogin, AdminDashboard,
     UserRegister, userlist,fieldofficerlist, farmerlist, AdminUpdateFarmer,
     UserLogin, adduser, DeleteUserById,
-    getuserbyid, AdminupdateUser, details,PClist,AsstPClist,downloadFarmersByCluster,
-    DeleteFarmerById, getfarmerbyid, changepassword,getFarmersByCluster,editFieldWorkerWorkDetailsById,DeleteFieldOfficerWorkDetailById, getAllFieldWorkerWorkDetails, UpdatePassword, getProductionAndCultivationById
+    getuserbyid, AdminupdateUser, details,PClist,getFarmerCropByCrop,AsstPClist,downloadFarmersByCluster,
+    DeleteFarmerById, getfarmerbyid, changepassword,downloadCropReportExcel,downloadFieldWorkerReport,getfieldworkerreport,getFarmersByCluster,editFieldWorkerWorkDetailsById,DeleteFieldOfficerWorkDetailById, getAllFieldWorkerWorkDetails, UpdatePassword, getProductionAndCultivationById
 } from '../Controllers/Admin_Controller.js';
 import {
     data, updateUser, addFieldWorkerWorkDetail, usergetAllFieldWorkerWorkDetails,
     FOdeleteFarmerById, getProductionAndCultivationByFarmerID,
     getFarmerById, UserLogout, UserUpdatePassword, addFarmerInfo, updateFieldWorkerWorkDetailsById,
     getFarmers, addCultivationCostDetails, addCultivationCostDetails1,
-    getProductionDetails, UserLocation, getalllocation,addInteraction,farmerlistbyuserid, getlocationbyuserid,locationdeletebyid, addProductionDetails, updateFarmerDetails, addCoordinatorWorkDetails, getFieldWorkerWorkDetailsById
+    getProductionDetails, UserLocation, getalllocation,Allfieldofficer,AllAsstPC,addInteraction,getCoordinatorDetailsByID,farmerlistbyuserid, getlocationbyuserid,locationdeletebyid, addProductionDetails, updateFarmerDetails, addCoordinatorWorkDetails, getFieldWorkerWorkDetailsById
 } from '../Controllers/ProjectManager_Controller.js';
 import { authenticateJWT } from '../Middlewares/JwtAuthAminLogin.js'; 
 import { authorizeRole } from '../Middlewares/RoleBasedAuth.js'; // Import the new middleware
@@ -49,13 +49,22 @@ router.get('/getAllFieldWorkerWorkDetails', getAllFieldWorkerWorkDetails);
 router.get('/work_details/:id', editFieldWorkerWorkDetailsById);
 
 
+
+
+
+
 router.get('/deleteWorkDetail/:id', DeleteFieldOfficerWorkDetailById);
 
 // REPORT FUNCTION GERENATE
 router.get('/getfarmerbyclusetr', getFarmersByCluster);
 router.get('/downloadxcel', downloadFarmersByCluster);
 
+router.get('/getFarmerCropByCrop', getFarmerCropByCrop);
+router.get('/downloadCropReportExcel', downloadCropReportExcel);
 
+
+router.get('/getfieldworkerreport', getfieldworkerreport);
+router.get('/downloadFieldWorkerReport', downloadFieldWorkerReport);
 
 router.post('/api/admin/userregister', upload.single('profileimage'), UserRegister);
 router.put('/api/admin/userupdate/:id', upload.single('profileimage'), updateUser);
@@ -69,7 +78,7 @@ router.put('/api/admin/userupdate/:id', upload.single('profileimage'), updateUse
 router.post('/api/user/userlogin', UserLogin);
 router.post('/api/user/addfarmerinfo', addFarmerInfo);
 router.get('/api/user/getFarmers', getFarmers);
-router.delete('/api/user/deletefarmer/:id', FOdeleteFarmerById);
+router.delete('/api/user/deletefarmer/:id', FOdeleteFarmerById);//*
 router.get('/api/user/addCultivationCostDetails1/:id', addCultivationCostDetails1);
 router.post('/api/user/addCultivationCostDetails/:id', addCultivationCostDetails);
 router.get('/api/user/getProductionDetails/:id', getProductionDetails);
@@ -83,18 +92,23 @@ router.get('/api/user/detailofproductionandcultivation/:farmerID', getProduction
 router.get('/api/user/workdetails', usergetAllFieldWorkerWorkDetails);
 router.get('/api/user/workdetailsbyid/:id', getFieldWorkerWorkDetailsById);
 router.put('/api/user/updateworkdetailsbyid/:id', updateFieldWorkerWorkDetailsById);
-
-
-
 router.put('/api/user/updateFarmerDetails/:id', updateFarmerDetails);
 router.post('/api/user/adduserlocation', UserLocation);
 router.get('/api/user/getalllocation', getalllocation);
 router.get('/api/user/getlocationbyuserid/:userId', getlocationbyuserid);
 router.delete('/api/user/locationdeletebyid/:id', locationdeletebyid);
-
 router.post('/api/user/addInteraction', addInteraction);
-
 router.get('/api/user/farmerlistbyuserid/:userid', farmerlistbyuserid);
+
+
+router.get('/api/user/allfieldofficer', Allfieldofficer);
+router.get('/api/user/allasstpc', AllAsstPC);
+
+
+
+router.get('/api/user/getCoordinatorDetailsByID/:coordinatorID', getCoordinatorDetailsByID);
+
+
 
 
 

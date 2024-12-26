@@ -1177,7 +1177,6 @@ export const details = async (req, res) => {
 //     }
 // };
 
-
 export const getProductionAndCultivationById = async (req, res) => {
     try {
         const { farmerID } = req.params;
@@ -1313,7 +1312,6 @@ export const editFieldWorkerWorkDetailsById = async (req, res) => {
         });
     }
 };
-
 
 export const getfarmerbyid = async (req, res) => {
     try {
@@ -1682,63 +1680,7 @@ export const AdminUpdateFarmer = async (req, res) => {
 };
 
 
-
-
-
-
 // REPORT GENARATE FARMER BY CLUSTER WISE
-
-// export const getFarmersByCluster = async (req, res) => {
-//     try {
-//         const clusterNames = [
-//             "Masola", "Bori Chandra", "Bramhi", "Chaani (ka)", "Malkhed Bu.",
-//             "Pathrad Devi", "Arambhi", "Murali", "Umari", "Adani", "Veni",
-//             "Chinchala", "Khandani", "Mardi", "Ner", "Pathrad Gole",
-//             "Tembhi", "Palaskund", "Bori Sinha", "Rui"
-//         ];
-
-//         const clusterName = req.query.clusterName; // Retrieve clusterName from query parameters
-
-//         if (!clusterName) {
-//             return res.render('clusterfarmer', {
-//                 success: false,
-//                 message: "Please select a cluster name.",
-//                 totalFarmers: 0,
-//                 data: [],
-//                 clusters: clusterNames, // Pass cluster names for the dropdown
-//             });
-//         }
-
-//         // Fetch farmers based on the selected cluster
-//         const farmersData = await farmers.findAll({
-//             where: { clusterName },
-//         });
-
-//         if (farmersData.length === 0) {
-//             return res.render('clusterfarmer', {
-//                 success: false,
-//                 message: `No farmers found in cluster '${clusterName}'.`,
-//                 totalFarmers: 0,
-//                 data: [],
-//                 clusters: clusterNames, // Pass cluster names for the dropdown
-//             });
-//         }
-
-//         const totalFarmers = farmersData.length;
-
-//         res.render('clusterfarmer', {
-//             success: true,
-//             message: `Farmers in cluster '${clusterName}' retrieved successfully.`,
-//             totalFarmers,
-//             data: farmersData,
-//             clusters: clusterNames, // Pass cluster names for the dropdown
-//         });
-//     } catch (error) {
-//         console.error("Error fetching farmers by cluster:", error);
-//         res.status(500).render('error', { message: "Internal server error", error: error.message });
-//     }
-// };
-
 
 export const getFarmersByCluster = async (req, res) => {
     try {
@@ -1772,46 +1714,117 @@ export const getFarmersByCluster = async (req, res) => {
     }
 };
 
-// export const downloadFarmersByCluster = async (req, res) => {
-//     try {
-//         const clusterName = req.query.clusterName || "Bori Chandra";
-//         const farmersData = await farmers.findAll({
-//             where: { clusterName },
-//         });
+export const getFarmerCropByCrop = async (req, res) => {
+    try {
+        const crop = req.query.crop || "Maize";
 
-//         if (farmersData.length === 0) {
-//             return res.status(404).json({ success: false, message: `No farmers found in cluster '${clusterName}'.` });
-//         }
-//         const excelData = farmersData.map(farmer => ({
-//             ID: farmer.id,
-//             UserID: farmer.userid,
-//             UserRole: farmer.userrole,
-//             FarmerID: farmer.farmerID,
-//             Name: farmer.name,
-//             VillageName: farmer.villageName,
-//             Taluka: farmer.taluka,
-//             ClusterName: farmer.clusterName,
-//             TotalLand: farmer.cultivatedLand,
-//             TypeOfLand: farmer.typeOfLand,
-//         }));
+        const rawCultivationCosts = await CultivationCost.findAll();
+        const rawProductionDetails = await ProductionDetails.findAll();
 
-//         const workbook = XLSX.utils.book_new();
-//         const worksheet = XLSX.utils.json_to_sheet(excelData);
-//         XLSX.utils.book_append_sheet(workbook, worksheet, 'Farmers');
+        // Parse and structure cultivation costs
+        const cultivationData = rawCultivationCosts.map(cost => ({
+            ...cost.toJSON(),
+            crops: JSON.parse(cost.crops),
+        })).filter(c => c.crops.crop === crop);
 
-//         const fileName = `Farmers_${clusterName}.xlsx`;
-//         const filePath = path.join(__dirname, fileName);
+        // Parse and structure production details
+        const productionData = rawProductionDetails.map(detail => {
+            let parsedCropName;
+            try {
+                parsedCropName = JSON.parse(detail.cropName);
+            } catch {
+                parsedCropName = detail.cropName;
+            }
+            return {
+                ...detail.toJSON(),
+                cropName: parsedCropName,
+            };
+        }).filter(p => p.cropName.name === crop);
 
-//         XLSX.writeFile(workbook, filePath);
-//         res.download(filePath, fileName, (err) => {
-//             if (err) console.error("Error sending file:", err);
-//             fs.unlinkSync(filePath);
-//         });
-//     } catch (error) {
-//         console.error("Error downloading farmers by cluster:", error);
-//         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
-//     }
-// };
+        // Calculate profit/loss
+        const profitLossData = [];
+
+        cultivationData.forEach(cultivation => {
+            const cropDetails = cultivation.crops;
+            const matchingProduction = productionData.find(production =>
+                production.cropName.name === cropDetails.crop &&
+                production.cropName.season === cropDetails.season &&
+                production.cropName.irrigationType === cropDetails.category
+            );
+
+            if (matchingProduction) {
+                const cultivationCost = cropDetails.totalCost;
+                const productionCost = matchingProduction.cropName.totalSaleValue;
+
+                const profitOrLoss = productionCost - cultivationCost;
+                const profitOrLossPercentage = ((profitOrLoss / cultivationCost) * 100).toFixed(2);
+
+                profitLossData.push({
+                    season: cropDetails.season,
+                    irrigationType: cropDetails.category,
+                    crop: cropDetails.crop,
+                    cultivationCost,
+                    productionCost,
+                    profitOrLoss,
+                    profitOrLossPercentage: `${profitOrLossPercentage}%`,
+                });
+            }
+        });
+
+        // Render the template with data
+        res.render("podt_cult_databycrop", {
+            success: true,
+            crop,
+            cultivationData,
+            productionData,
+            profitLossData,
+        });
+    } catch (error) {
+        console.error("Error fetching crop data:", error);
+        res.status(500).render("podt_cult_databycrop", {
+            success: false,
+            message: "Internal server error occurred while fetching crop data.",
+            error: error.message,
+            crop: req.query.crop,
+            cultivationData: [],
+            productionData: [],
+            profitLossData: [],
+        });
+    }
+};
+
+export const getfieldworkerreport = async (req, res) => {
+    try {
+        const { name } = req.query;
+
+        // Fetch unique names for the dropdown
+        const uniqueNames = await FieldWorkerWorkDetail.findAll({
+            attributes: ['name'],
+            group: ['name'],
+        });
+
+        // Fetch field worker data based on query parameter or all if none
+        let fieldWorkerData;
+        if (name) {
+            fieldWorkerData = await FieldWorkerWorkDetail.findAll({
+                where: { name },
+            });
+        } else {
+            fieldWorkerData = await FieldWorkerWorkDetail.findAll(); // Fetch all users if no name is selected
+        }
+
+        res.render('fieldofficerworkreport', {
+            fieldWorkerData,
+            uniqueNames,
+            selectedName: name || '',
+            totalRecords: fieldWorkerData.length, // Add total records count
+            success: fieldWorkerData.length > 0, // Indicate if records are found
+        });
+    } catch (error) {
+        console.error('Error fetching field worker report:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
 
 export const downloadFarmersByCluster = async (req, res) => {
     try {
@@ -1871,6 +1884,144 @@ export const downloadFarmersByCluster = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
 };
+
+export const downloadCropReportExcel = async (req, res) => {
+    try {
+        const crop = req.query.crop || "Maize"; // Default crop if not provided
+
+        const rawCultivationCosts = await CultivationCost.findAll();
+        const rawProductionDetails = await ProductionDetails.findAll();
+
+        // Parse and structure cultivation costs
+        const cultivationData = rawCultivationCosts.map(cost => ({
+            ...cost.toJSON(),
+            crops: JSON.parse(cost.crops),
+        })).filter(c => c.crops.crop === crop);
+
+        // Parse and structure production details
+        const productionData = rawProductionDetails.map(detail => {
+            let parsedCropName;
+            try {
+                parsedCropName = JSON.parse(detail.cropName);
+            } catch {
+                parsedCropName = detail.cropName;
+            }
+            return {
+                ...detail.toJSON(),
+                cropName: parsedCropName,
+            };
+        }).filter(p => p.cropName.name === crop);
+
+        // Prepare the data for Excel file
+        const cultivationHeaders = ["#", "Crop", "Season", "Seed Cost", "Land Cost", "Fertilizer Cost", "Pesticide Cost", "Harvest Cost", "Labor Cost", "Misc Cost", "Total Cost"];
+        const productionHeaders = ["#", "Crop", "Season", "Total Yield", "Total Sale Value", "Surplus", "Sale Value per Quintal", "Total Cost"];
+
+        const cultivationRows = cultivationData.map((item, index) => [
+            index + 1,
+            item.crops.crop,
+            item.crops.season,
+            item.crops.costs.seedCost,
+            item.crops.costs.landCost,
+            item.crops.costs.fertilizerCost,
+            item.crops.costs.pesticideCost,
+            item.crops.costs.harvestCost,
+            item.crops.costs.laborCost,
+            item.crops.costs.miscCost,
+            item.crops.totalCost
+        ]);
+
+        const productionRows = productionData.map((item, index) => [
+            index + 1,
+            item.cropName.name,
+            item.cropName.season,
+            item.cropName.totalYield,
+            item.cropName.totalSaleValue,
+            item.cropName.surplus,
+            item.cropName.saleValuePerQuintal,
+            item.cropName.totalCost
+        ]);
+
+        // Create the Excel sheet for cultivation and production data
+        const ws1 = XLSX.utils.aoa_to_sheet([cultivationHeaders, ...cultivationRows]);
+        const ws2 = XLSX.utils.aoa_to_sheet([productionHeaders, ...productionRows]);
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws1, "Cultivation Data");
+        XLSX.utils.book_append_sheet(wb, ws2, "Production Data");
+
+        // Send the Excel file as a download
+        res.setHeader('Content-Disposition', 'attachment; filename=' + `${crop}_Data.xlsx`);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        // Write Excel file in buffer format and send it directly to the response
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+        res.send(excelBuffer); // Send the buffer as the response
+    } catch (error) {
+        console.error("Error generating Excel:", error);
+        res.status(500).send("Error generating Excel report");
+    }
+};
+
+export const downloadFieldWorkerReport = async (req, res) => {
+    try {
+        const { name } = req.query;
+
+        // Fetch field worker data based on query parameter or all if 'All' or empty string is selected
+        let fieldWorkerData;
+        if (name && name !== 'All') { // If a specific name is selected
+            fieldWorkerData = await FieldWorkerWorkDetail.findAll({
+                where: { name },
+            });
+        } else { // If 'All' is selected or no name is specified
+            fieldWorkerData = await FieldWorkerWorkDetail.findAll();
+        }
+
+        // Convert data to a plain array of objects
+        const jsonData = fieldWorkerData.map(worker => ({
+            ID: worker.id,
+            Name: worker.name,
+            Address: worker.address,
+            Qualifications: worker.qualifications,
+            Mobile_Number: worker.mobileNumber,
+            Email_ID: worker.emailID,
+            Work_Date: worker.workDate,
+            Villages_Visited: worker.villagesVisited,
+        }));
+
+        // Create a worksheet from JSON data
+        const worksheet = XLSX.utils.json_to_sheet(jsonData);
+
+        // Create a new workbook and append the worksheet
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Field Worker Report');
+
+        // Write workbook to a buffer
+        const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+        // Set filename dynamically based on the name selected (or "All" if no specific name)
+        const fileName = name && name !== 'All' ? `Field_Worker_Report_${name}.xlsx` : 'Field_Worker_Report_All.xlsx';
+
+        // Set response headers and send the file
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(excelBuffer);
+    } catch (error) {
+        console.error('Error downloading Excel:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

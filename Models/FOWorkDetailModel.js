@@ -76,6 +76,10 @@ const FieldWorkerWorkDetail = sequelize.define('FieldWorkerWorkDetail', {
         type: DataTypes.JSON, 
         allowNull: true,
     },
+    observationinbrif:{
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
     consultancyTelephone: {
         type: DataTypes.INTEGER,
         defaultValue: 0, 

@@ -7,11 +7,7 @@ import FieldWorkerWorkDetail from '../Models/FOWorkDetailModel.js'
 import Location from '../Models/UserLocationModel.js';
 import bcrypt from "bcrypt";
 import Interaction from '../Models/InteractionModel.js';
-
-
-
-
-
+import PCworkDetail from '../Models/PrpjectCoordinatorWorkDetailModel.js'
 import jwt from 'jsonwebtoken';
 
 export const data = async (req, res) => {
@@ -398,8 +394,8 @@ export const addCoordinatorWorkDetails = async (req, res) => {
 
         // Create a new work detail entry
         const newWorkDetail = await workedetails.create({
-            workDetailID: `wd_${Date.now()}`, // Generate a unique ID for work details
-            coordinatorID, // Use the coordinatorID fetched from the User model
+            workDetailID: `wd_${Date.now()}`,
+            coordinatorID, 
             trainingProgrammes: trainingProgrammes || [],
             reviewMeetings: reviewMeetings || [],
             monitoringVisits: monitoringVisits || [],
@@ -730,7 +726,7 @@ export const addFieldWorkerWorkDetail = async (req, res) => {
         const {
             userid, name, address, qualifications, mobileNumber, emailID, ownLandCultivatedUnderNaturalFarming, clusterID,
             workDate, villagesVisited, travelInKms, farmersContactedIndividually, groupMeetingsConducted, farmersContactedInGroupMeetings,
-            clusterTrainingPlace, farmersAttendedTraining, inputSupplied, consultancyTelephone, consultancyWhatsApp
+            clusterTrainingPlace, farmersAttendedTraining, inputSupplied,observationinbrif, consultancyTelephone, consultancyWhatsApp
         } = req.body;
 
         // Validate required fields
@@ -763,6 +759,7 @@ export const addFieldWorkerWorkDetail = async (req, res) => {
             clusterTrainingPlace,
             farmersAttendedTraining,
             inputSupplied,
+            observationinbrif,
             consultancyTelephone,
             consultancyWhatsApp,
             totalConsultancy
@@ -1099,10 +1096,11 @@ export const updateFieldWorkerWorkDetailsById = async (req, res) => {
             clusterTrainingPlace,
             farmersAttendedTraining,
             inputSupplied,
+            observationinbrif,
             consultancyTelephone,
             consultancyWhatsApp,
             totalConsultancy,
-        } = req.body; // Destructure fields from request body
+        } = req.body;
 
 
         if (!id) {
@@ -1112,15 +1110,12 @@ export const updateFieldWorkerWorkDetailsById = async (req, res) => {
             });
         }
 
-        // Validate input payload
         if (!name || !mobileNumber || !emailID) {
             return res.status(400).json({
                 success: false,
                 message: "Name, mobile number, and email ID are required fields.",
             });
         }
-
-        // Find the record by ID
         const workDetail = await FieldWorkerWorkDetail.findOne({ where: { id } });
         if (!workDetail) {
             return res.status(404).json({
@@ -1128,8 +1123,6 @@ export const updateFieldWorkerWorkDetailsById = async (req, res) => {
                 message: `No field worker work details found for ID: ${id}.`,
             });
         }
-
-        // Update the record
         const updatedWorkDetail = await FieldWorkerWorkDetail.update(
             {
                 userid,
@@ -1148,22 +1141,20 @@ export const updateFieldWorkerWorkDetailsById = async (req, res) => {
                 farmersContactedInGroupMeetings,
                 clusterTrainingPlace,
                 farmersAttendedTraining,
-                inputSupplied: JSON.stringify(inputSupplied), // Store array as a JSON string
+                inputSupplied: inputSupplied,
+                observationinbrif,
                 consultancyTelephone,
                 consultancyWhatsApp,
                 totalConsultancy,
             },
             { where: { id } }
         );
-
         if (!updatedWorkDetail[0]) {
             return res.status(400).json({
                 success: false,
                 message: `Failed to update work details for ID: ${id}.`,
             });
         }
-
-        // Return success response
         return res.status(200).json({
             success: true,
             message: `Field worker work details updated successfully for ID: ${id}.`,
@@ -1276,10 +1267,6 @@ export const updateFieldWorkerWorkDetailsById = async (req, res) => {
 // Location APi's
 
 
-
-
-
-
 export const updateFarmerDetails = async (req, res) => {
     try {
         const id = req.params.id; // Get farmerID from URL parameters
@@ -1369,7 +1356,6 @@ export const UserLocation = async (req, res) => {
 
 }
 
-
 export const getalllocation =  async (req, res) => {
     try {
         const locations = await Location.findAll();
@@ -1397,7 +1383,6 @@ export const getlocationbyuserid = async (req, res) => {
     }
 };
 
-
 export const locationdeletebyid = async (req, res) => {
     try {
         const { id } = req.params;
@@ -1417,6 +1402,53 @@ export const locationdeletebyid = async (req, res) => {
     }
 };
 
+export const Allfieldofficer = async (req, res) => {
+    try {
+        const fieldOfficers = await UserModel.findAll({
+            where: { role: 'Field Officer' },
+            attributes:['fullname']
+        });
+
+        if (fieldOfficers.length === 0) {
+            res.status(404).json({
+                success:false,
+                message:"Farmer Not found",
+               })
+        }
+        res.status(200).json({
+            success:true,
+            message:"All field officer",
+            data:fieldOfficers
+           })
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+export const AllAsstPC = async (req, res) => {
+    try {
+        const AsstProcjectCoardinater = await UserModel.findAll({
+            where: { role: 'Assistant Project Coordinator' },
+            attributes:['fullname']
+        });
+
+        if (AsstProcjectCoardinater.length === 0) {
+            res.status(404).json({
+                success:false,
+                message:"Not Found Asst. Project coordinater",
+               })
+        }
+        res.status(200).json({
+            success:true,
+            message:"All field officer",
+            data:AsstProcjectCoardinater
+           })
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
 
 // intaraction with farmer
 
@@ -1449,35 +1481,67 @@ export const addInteraction = async (req, res) => {
     }
 };
 
-
-
 export const farmerlistbyuserid = async (req, res) => {
     try {
         const { userid } = req.params;
-
         if (!userid) {
             return res.status(400).json({ message: "User ID is required" });
         }
-
         const Allfarmers = await Farmer.findAll({
             where: { userid },
+            attributes: ['name']
         });
-
         if (Allfarmers.length === 0) {
             return res.render('farmerlist', { message: 'No farmers found for this user' });
         }
-
         res.status(200).json({
             success:true,
             message:"All farmer related user",
             data:Allfarmers
         })
-        
     } catch (error) {
         console.error("Error fetching farmers by user ID:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
+export const getCoordinatorDetailsByID = async (req, res) => {
+    try {
+        const { coordinatorID } = req.params;
+
+        if (!coordinatorID) {
+            return res.status(400).json({
+                success: false,
+                message: "Coordinator ID is required",
+            });
+        }
+        const coordinatorDetails = await PCworkDetail.findAll({
+            where: { coordinatorID },
+        });
+
+        if (coordinatorDetails.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No data found for the given Coordinator ID",
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "Coordinator details retrieved successfully",
+            data: coordinatorDetails,
+        });
+    } catch (error) {
+        console.error("Error fetching coordinator details:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message,
+        });
+    }
+};
+
+
+
 
 
 

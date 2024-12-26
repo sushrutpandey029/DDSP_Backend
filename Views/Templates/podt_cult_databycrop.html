@@ -1,0 +1,154 @@
+{{>header user=user}}
+
+{{>verticalnav}}
+<style>
+    .profit {
+        color: green;
+        font-weight: bold;
+    }
+
+    .loss {
+        color: red;
+        font-weight: bold;
+    }
+</style>
+<div class="hk-pg-wrapper">
+    <div class="container-xxl">
+        <header class="invoice-header">
+            <div class="d-flex align-items-center">
+                <h1>Crop Report</h1>
+            </div>
+        </header>
+
+        <!-- Crop Filter Dropdown -->
+        <div class="row">
+            <div class="col-7 mb-3">
+                <form method="GET" action="/getFarmerCropByCrop">
+                    <label class="form-label me-2">Select Crop:</label>
+                    <select class="form-select form-select-sm w-130p" name="crop">
+                        <option value="Maize" {{#if (eq crop 'Maize' )}}selected{{/if}}>Maize</option>
+                        <option value="Wheat" {{#if (eq crop 'Wheat' )}}selected{{/if}}>Wheat</option>
+                        <option value="Rice" {{#if (eq crop 'Rice' )}}selected{{/if}}>Rice</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm ms-2">Filter</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Download Excel Button -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="/downloadCropReportExcel?crop={{crop}}" class="btn btn-success">Download Excel</a>
+            </div>
+        </div>
+
+        <!-- Cultivation Data Table -->
+        <div class="row">
+            <div class="col-sm-12">
+                <h3>Cultivation Costs for {{crop}}</h3>
+                <table class="table table-bordered" id="cultivationTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Crop</th>
+                            <th>Season</th>
+                            <th>Seed Cost</th>
+                            <th>Land Cost</th>
+                            <th>Fertilizer Cost</th>
+                            <th>Pesticide Cost</th>
+                            <th>Harvest Cost</th>
+                            <th>Labor Cost</th>
+                            <th>Misc Cost</th>
+                            <th>Total Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each cultivationData}}
+                        <tr>
+                            <td>{{@index}}</td>
+                            <td>{{crops.crop}}</td>
+                            <td>{{crops.season}}</td>
+                            <td>{{crops.costs.seedCost}}</td>
+                            <td>{{crops.costs.landCost}}</td>
+                            <td>{{crops.costs.fertilizerCost}}</td>
+                            <td>{{crops.costs.pesticideCost}}</td>
+                            <td>{{crops.costs.harvestCost}}</td>
+                            <td>{{crops.costs.laborCost}}</td>
+                            <td>{{crops.costs.miscCost}}</td>
+                            <td>{{crops.totalCost}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Production Data Table -->
+        <div class="row">
+            <div class="col-sm-12">
+                <h3>Production Details for {{crop}}</h3>
+                <table class="table table-bordered" id="productionTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Crop</th>
+                            <th>Season</th>
+                            <th>Total Yield</th>
+                            <th>Total Sale Value</th>
+                            <th>Surplus</th>
+                            <th>Sale Value per Quintal</th>
+                            <th>Total Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each productionData}}
+                        <tr>
+                            <td>{{@index}}</td>
+                            <td>{{cropName.name}}</td>
+                            <td>{{cropName.season}}</td>
+                            <td>{{cropName.totalYield}}</td>
+                            <td>{{cropName.totalSaleValue}}</td>
+                            <td>{{cropName.surplus}}</td>
+                            <td>{{cropName.saleValuePerQuintal}}</td>
+                            <td>{{cropName.totalCost}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{{>footer}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
