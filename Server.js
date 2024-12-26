@@ -19,7 +19,7 @@ const MySQLStore = require('express-mysql-session')(session);
 dotenv.config();
 
 // Registering the custom helper to parse JSON
-hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'));
+
 
 hbs.registerHelper('parseJson', function (jsonString) {
   try {
@@ -86,6 +86,8 @@ const __dirname = path.dirname(__filename);
 
 app.set('view engine', 'html');
 app.engine('html', hbs.__express);
+
+hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'));
 
 app.set('views', path.join(__dirname, 'src', 'views')); 
 app.set('views', path.join(__dirname, 'Views', 'Templates'));
