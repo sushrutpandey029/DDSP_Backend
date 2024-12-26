@@ -5,8 +5,8 @@
   "main": "Server.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon Server.js",
-    "dev run": "npm start",
+    "start": "node Server.js",
+    "dev": "nodemon Server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "DDPS",
