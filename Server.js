@@ -80,12 +80,24 @@ const __dirname = path.dirname(__filename);
 
 
 
+
 app.set('view engine', 'html');
 app.engine('html', hbs.__express);
 
 app.set('views', path.join(__dirname, 'src', 'views')); 
 app.set('views', path.join(__dirname, 'Views', 'Templates'));
+
 hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'));
+
+
+hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'), (err) => {
+  if (err) {
+    console.error('Error registering partials:', err);
+  } else {
+    console.log('Partials successfully registered.');
+  }
+});
+console.log('Partials directory:', path.join(__dirname, 'Views', 'Templates', 'commonTemplate'));
 // app.use(express.static(path.join(__dirname, 'src', 'assets')))
 
 app.use(express.static(path.join(__dirname, 'Views', 'src', 'assets')));
@@ -100,11 +112,15 @@ const Port = process.env.PORT || 2024;
 
 // Configure MySQL session store
 const sessionStore = new MySQLStore({
-  host: '68.178.173.163', // Your MySQL host
-  port: 3306, // Your MySQL port
-  user: 'milleniancecom_ddspapp', // Your MySQL username
-  password: '@$e$4~bzK5SS', // Your MySQL password
-  database: 'milleniancecom_ddsp_app', // Your database name
+  host: '68.178.173.163',
+  port: 3306,
+  user: 'milleniancecom_ddspapp',
+  password: '@$e$4~bzK5SS',
+  database: 'milleniancecom_ddsp_app',
+  checkExpirationInterval: 900000, // How often to check for expired sessions (in milliseconds)
+  expiration: 86400000, // The maximum age of a valid session (in milliseconds)
+  createDatabaseTable: true, // Whether to create the sessions table automatically
+  endConnectionOnClose: false, // Do not close connections after each query
 });
 
 
