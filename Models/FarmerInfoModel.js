@@ -29,7 +29,7 @@ const FarmerInfo = sequelize.define('FarmerInformations', {
   },
   emailID: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     unique: true, // Ensures unique email addresses
     validate: {
       isEmail: true, // Ensures valid email format
