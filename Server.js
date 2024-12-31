@@ -1,67 +1,39 @@
 import express from 'express';
-import cluster from 'cluster';
 import dotenv from 'dotenv';
-import os from 'os';
 import sequelize from "./DB_Connection/MySql_Connect.js";
 import { router } from './Routes/Router.js';
-import hbs from 'hbs'
+import hbs from 'hbs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import flash from 'connect-flash';
-import cors from 'cors'; 
+import cors from 'cors';
 import { createRequire } from 'module';
 import session from 'express-session';
-import Handlebars from 'handlebars';
 
 const require = createRequire(import.meta.url);
 const MySQLStore = require('express-mysql-session')(session);
 
 dotenv.config();
 
-// Registering the custom helper to parse JSON
-
-
+// Registering the custom helpers
 hbs.registerHelper('parseJson', function (jsonString) {
   try {
-      return JSON.parse(jsonString);
+    return JSON.parse(jsonString);
   } catch (err) {
-      console.error('Invalid JSON string:', jsonString);
-      return [];
+    console.error('Invalid JSON string:', jsonString);
+    return [];
   }
 });
 
-
-// Register a helper for greater than
-hbs.registerHelper('gt', function (value1, value2) {
-    return value1 > value2;
-});
-hbs.registerHelper("eq", (a, b) => a === b);
-
-Handlebars.registerHelper('json', function(context) {
-  return JSON.stringify(context, null, 2);
-});
-
-// Register the 'isObject' helper for Handlebars to check if a value is an object
-hbs.registerHelper('isObject', function(value) {
-  return typeof value === 'object' && value !== null;
-});
-
-hbs.registerHelper('eq', function (a, b) {
-  return a === b;
-});
-
-hbs.registerHelper('ifEquals', function (arg1, arg2, options) {
-  return arg1 === arg2 ? options.fn(this) : options.inverse(this);
-});
-
-hbs.registerHelper('fallback', function (value, fallbackValue) {
-  return value || fallbackValue;
-});
-
-
+hbs.registerHelper('gt', (value1, value2) => value1 > value2);
+hbs.registerHelper('eq', (a, b) => a === b);
+hbs.registerHelper('isObject', value => typeof value === 'object' && value !== null);
+hbs.registerHelper('ifEquals', (arg1, arg2, options) =>
+  arg1 === arg2 ? options.fn(this) : options.inverse(this)
+);
+hbs.registerHelper('fallback', (value, fallbackValue) => value || fallbackValue);
 
 const requiredEnvVars = ['SESSION_SECRET', 'ACCESS_TOKEN_SECRET'];
-
 requiredEnvVars.forEach((varName) => {
   if (!process.env[varName]) {
     console.error(`Error: Missing environment variable ${varName}`);
@@ -69,112 +41,79 @@ requiredEnvVars.forEach((varName) => {
   }
 });
 
-
-
 const app = express();
-
 app.use(cors());
 
-
-
 const __filename = fileURLToPath(import.meta.url);
-
 const __dirname = path.dirname(__filename);
 
-
-
-
+// Configure view engine and partials
 app.set('view engine', 'html');
 app.engine('html', hbs.__express);
-
 hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'));
-
-app.set('views', path.join(__dirname, 'src', 'views')); 
 app.set('views', path.join(__dirname, 'Views', 'Templates'));
 
-// hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'));
-
-// app.use(express.static(path.join(__dirname, 'src', 'assets')))
-
+// Configure static files
 app.use(express.static(path.join(__dirname, 'Views', 'src', 'assets')));
-
 app.use('/profile-images', express.static(path.join(__dirname, 'Views', 'src', 'ProfileImage')));
 
-
+// Parse request bodies
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-const Port = process.env.PORT || 2024;
-
-// Configure MySQL session store
+// Configure session with MySQL session store
 const sessionStore = new MySQLStore({
   host: '68.178.173.163',
   port: 3306,
   user: 'milleniancecom_ddspapp',
   password: '@$e$4~bzK5SS',
   database: 'milleniancecom_ddsp_app',
-  checkExpirationInterval: 900000, // How often to check for expired sessions (in milliseconds)
-  expiration: 86400000, // The maximum age of a valid session (in milliseconds)
-  createDatabaseTable: true, // Whether to create the sessions table automatically
-  endConnectionOnClose: false, // Do not close connections after each query
+  checkExpirationInterval: 900000,
+  expiration: 86400000,
+  createDatabaseTable: true,
+  endConnectionOnClose: false,
 });
-
 
 app.use(
   session({
-    key: 'session_cookie_name', // Name of the session cookie
+    key: 'session_cookie_name',
     secret: 'rashu@123', // Replace with a strong secret
-    store: sessionStore, // Use MySQL session store
-    resave: false, // Avoid resaving session if not modified
-    saveUninitialized: false, // Don't create session until something is stored
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-      httpOnly: true, 
-      secure: false, 
+      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: false,
     },
   })
 );
+
 app.use(flash());
 
-// Pass session data to views
+// Pass session data and flash messages to views
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error');
   next();
-});
-
-app.use((req, res, next) => {
-    res.locals.success = req.flash('success');
-    res.locals.error = req.flash('error');
-    next();
 });
 
 app.use('/', router);
 
-// Function to start the server
+const Port = process.env.PORT || 2024;
+
+// Start the server
 const startServer = () => {
-  sequelize.sync().then(() => {
-    
-    app.listen(Port, () => {
-      console.log(`Server running on port: http://localhost:${Port}`);
+  sequelize.sync()
+    .then(() => {
+      app.listen(Port, () => {
+        console.log(`Server running on port: http://localhost:${Port}`);
+      });
+    })
+    .catch((err) => {
+      console.error("MySQL connection failed:", err);
     });
-  }).catch((err) => {
-    console.error("MySQL connection failed:", err);
-  });
 };
 
-// Check if the current process is a master
-if (cluster.isMaster) {
-  const numCPUs = os.cpus().length; // Get the number of CPU cores
-
-  // Fork workers
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  cluster.on('exit', (worker, code, signal) => {
-    console.log(`Worker ${worker.process.pid} died`);
-  });
-} else {
-  // Workers can share any TCP connection
-  startServer();
-}
+startServer();
