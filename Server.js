@@ -59,16 +59,19 @@ app.use('/profile-images', express.static(path.join(__dirname, 'Views', 'src', '
 
 // Configure session with MySQL session store
 const sessionStore = new MySQLStore({
-  host: '127.0.0.1',
+  host: '68.178.173.163',
   port: 3306,
-  user: 'root',
-  password: 'root@123',
-  database: 'ddsp',
+  user: 'milleniancecom_ddspapp',
+  password: '@$e$4~bzK5SS',
+  database: 'milleniancecom_ddsp_app',
+  checkExpirationInterval: 900000,
+  expiration: 86400000,
 });
+
 app.use(
   session({
     key: 'session_cookie_name',
-    secret: process.env.SESSION_SECRET,
+    secret: 'rashu@123',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
