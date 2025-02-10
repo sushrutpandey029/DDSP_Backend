@@ -101,7 +101,8 @@ app.engine('html', hbs.__express);
 // app.set('views', path.join(__dirname, 'src', 'views'));
 app.set('views', path.join(__dirname, 'Views', 'Templates'));
 
-hbs.registerPartials(path.join(__dirname, 'Views', 'Templates', 'commonTemplate'));
+hbs.registerPartials(path.join(__dirname, 'Views', 'Partials'));
+
 // app.use(express.static(path.join(__dirname, 'src', 'assets')))
 
 app.use(express.static(path.join(__dirname, 'Views', 'src', 'assets')));

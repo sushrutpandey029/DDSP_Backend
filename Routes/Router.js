@@ -69,7 +69,6 @@ router.get('/downloadxcel', downloadFarmersByCluster);
 router.get('/getFarmerCropByCrop', getFarmerCropByCrop);
 router.get('/downloadCropReportExcel', downloadCropReportExcel);
 
-
 router.get('/getfieldworkerreport', getfieldworkerreport);
 router.get('/downloadFieldWorkerReport', downloadFieldWorkerReport);
 
@@ -81,8 +80,6 @@ router.get('/download_filtered_crop_data', download_filtered_crop_data_by_farmer
 
 router.get('/locationreportbyuser', getLocationByName);
 router.get('/downloadsxcelLocationByName', downloadsxcelLocationByName);
-
-
 
 
 router.post('/api/user/userlogin', UserLogin);
