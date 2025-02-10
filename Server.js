@@ -2,9 +2,9 @@ import express from 'express';
 import cluster from 'cluster';
 import dotenv from 'dotenv';
 import os from 'os';
-import sequelize from "./DB_Connection/MySql_Connect.js";
+import sequelize from './DB_Connection/MySql_Connect.js';
 import { router } from './Routes/Router.js';
-import hbs from 'hbs'
+import hbs from 'hbs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import flash from 'connect-flash';
@@ -52,9 +52,8 @@ hbs.registerHelper('ifCond', function (v1, v2, options) {
 hbs.registerHelper('gt', function (value1, value2) {
   return value1 > value2;
 });
-hbs.registerHelper("eq", (a, b) => a === b);
 
-Handlebars.registerHelper('json', function (context) {
+hbs.registerHelper('json', function (context) {
   return JSON.stringify(context, null, 2);
 });
 
@@ -63,20 +62,8 @@ hbs.registerHelper('isObject', function (value) {
   return typeof value === 'object' && value !== null;
 });
 
-hbs.registerHelper('eq', function (a, b) {
-  return a === b;
-});
-
-hbs.registerHelper('ifEquals', function (arg1, arg2, options) {
-  return arg1 === arg2 ? options.fn(this) : options.inverse(this);
-});
-
 hbs.registerHelper('fallback', function (value, fallbackValue) {
   return value || fallbackValue;
-});
-
-hbs.registerHelper('ifEquals', function (arg1, arg2, options) {
-  return arg1 === arg2 ? options.fn(this) : options.inverse(this);
 });
 
 const requiredEnvVars = ['SESSION_SECRET', 'ACCESS_TOKEN_SECRET'];
@@ -98,15 +85,11 @@ const __dirname = path.dirname(__filename);
 app.set('view engine', 'html');
 app.engine('html', hbs.__express);
 
-// app.set('views', path.join(__dirname, 'src', 'views'));
 app.set('views', path.join(__dirname, 'Views', 'Templates'));
 
 hbs.registerPartials(path.join(__dirname, 'Views', 'Partials'));
 
-// app.use(express.static(path.join(__dirname, 'src', 'assets')))
-
 app.use(express.static(path.join(__dirname, 'Views', 'src', 'assets')));
-
 app.use('/profile-images', express.static(path.join(__dirname, 'Views', 'src', 'ProfileImage')));
 
 app.use(express.json());
@@ -123,20 +106,24 @@ const sessionStore = new MySQLStore({
   database: 'milleniancecom_ddsp_app', // Your database name
 });
 
+// Logging session store errors
+sessionStore.on('error', (err) => {
+  console.error('Session Store Error:', err);
+});
+
 app.use(
   session({
-    key: 'session_cookie_name', // Name of the session cookie
-    secret: process.env.SESSION_SECRET || 'defaultsecret', // Replace with a strong secret
-    store: sessionStore, // Use MySQL session store
-    resave: false, // Avoid resaving session if not modified
-    saveUninitialized: false, // Don't create session until something is stored
+    key: 'session_cookie_name',
+    secret: process.env.SESSION_SECRET || 'defaultsecret',
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production', // Ensure HTTPS
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
-
 
 app.use(flash());
 
@@ -154,17 +141,23 @@ app.use((req, res, next) => {
 
 app.use('/', router);
 
+// Centralized error handler
 app.use((err, req, res, next) => {
-    console.error("Error:", err);
-    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  console.error("Error:", err);
+  console.error(err.stack); // Log full error stack trace
+  res.status(500).json({ message: "Internal Server Error", error: err.message });
 });
 
 // Function to start the server
 const startServer = () => {
-  sequelize.sync().then(() => {
-
-    app.listen(Port, () => {
-      console.log(`Server running on port: http://localhost:${Port}`);
+  sequelize.authenticate().then(() => {
+    console.log("MySQL connection established.");
+    sequelize.sync().then(() => {
+      app.listen(Port, () => {
+        console.log(`Server running on port: http://localhost:${Port}`);
+      });
+    }).catch((err) => {
+      console.error("Error syncing database:", err);
     });
   }).catch((err) => {
     console.error("MySQL connection failed:", err);
@@ -173,13 +166,15 @@ const startServer = () => {
 
 // Check if the current process is a master
 if (cluster.isMaster) {
-  const numCPUs = os.cpus().length; // Get the number of CPU cores
+  const numCPUs = os.cpus().length;
+
+  console.log(`Master process ${process.pid} is forking ${numCPUs} workers.`);
 
   // Fork workers
   for (let i = 0; i < numCPUs; i++) {
     cluster.fork();
   }
-  
+
   cluster.on('exit', (worker, code, signal) => {
     console.log(`Worker ${worker.process.pid} died`);
   });
